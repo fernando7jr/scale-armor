@@ -146,22 +146,22 @@ export class Routing {
         }
     }
     public static Create(route: string) {
-        return this.__decorator(route, Method.Create);
+        return this.__decorator(route, Method.Create) as any;
     }
     public static Find(route: string) {
-        return this.__decorator(route, Method.Find);
+        return this.__decorator(route, Method.Find) as any;
     }
     public static Get(route: string) {
-        return this.__decorator(route, Method.Get);
+        return this.__decorator(route, Method.Get) as any;
     }
     public static Patch(route: string) {
-        return this.__decorator(route, Method.Patch);
+        return this.__decorator(route, Method.Patch) as any;
     }
     public static Remove(route: string) {
-        return this.__decorator(route, Method.Remove);
+        return this.__decorator(route, Method.Remove) as any;
     }
     public static Update(route: string) {
-        return this.__decorator(route, Method.Update);
+        return this.__decorator(route, Method.Update) as any;
     }
 
     private __name: string;
