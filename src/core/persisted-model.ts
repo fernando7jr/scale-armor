@@ -1,10 +1,22 @@
+/**
+ * 
+ *
+ * @export
+ * @interface Model
+ */
 export interface Model {
     _id?: string;
     [key: string]: any;
 }
 
-
-export interface PersistedModel<T extends Model> {
+/**
+ * Model service for CRUD operations
+ *
+ * @export
+ * @interface PersistedModelService
+ * @template T
+ */
+export interface PersistedModelService<T extends Model> {
     name: string;
     create(data: T | T[]): Promise<T[]>;
     find(condition?: any, projection?: any): Promise<T[]>;
@@ -18,6 +30,6 @@ export interface PersistedModel<T extends Model> {
 }
 
 
-export interface PersistedModelConstructor<T extends Model> {
-    new (): PersistedModel<T>;
+export interface PersistedModelServiceConstructor<T extends Model> {
+    new (): PersistedModelService<T>;
 }

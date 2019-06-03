@@ -11,7 +11,7 @@ import {
     Method, 
     Routing
 } from "./routing";
-import { PersistedModelConstructor, PersistedModel } from "./persisted-model";
+import { PersistedModelServiceConstructor } from "./persisted-model";
 import { NotFound, BadRequest } from "@feathersjs/errors";
 
 
@@ -20,12 +20,12 @@ export interface RoutingAnyConstructor {
 }
 
 export class CRUD<T> {
-    private __modelConstructor: PersistedModelConstructor<T>;
-    constructor (modelConstructor: PersistedModelConstructor<T>) {
+    private __modelConstructor: PersistedModelServiceConstructor<T>;
+    constructor (modelConstructor: PersistedModelServiceConstructor<T>) {
         this.__modelConstructor = modelConstructor;
     }
 
-    static for<T>(route: string, modelConstructor: PersistedModelConstructor<T>, allowedMethods?: Method[]) {
+    static for<T>(route: string, modelConstructor: PersistedModelServiceConstructor<T>, allowedMethods?: Method[]) {
         return new CRUD(modelConstructor).forRoute(route, allowedMethods);
     }
     
@@ -171,7 +171,7 @@ export class CRUD<T> {
 }
 
 
-export function CRUDMethods<M>(route: string, modelConstructor: PersistedModelConstructor<M>, allowedMethods?: Method[]) {
+export function CRUDMethods<M>(route: string, modelConstructor: PersistedModelServiceConstructor<M>, allowedMethods?: Method[]) {
     return function <T extends RoutingAnyConstructor>(constructor: T) {
         return <T>class extends constructor {
             constructor(...args: any[]) {

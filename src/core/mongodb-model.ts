@@ -1,5 +1,5 @@
-import { PersistedModel, Model } from "./persisted-model";
-import { createConnection, model, Model as MongooseModel, Schema, Document, set} from "mongoose";
+import { PersistedModelService, Model } from "./persisted-model";
+import { createConnection, Model as MongooseModel, Schema, Document, set} from "mongoose";
 import * as fs from "fs";
 import { ObjectId } from "bson";
 import { ConfigStorage } from "./config";
@@ -7,14 +7,23 @@ import { ConfigStorage } from "./config";
 
 export { ObjectId } from "bson";
 
-
+/**
+ * Schema for validating and constraint enforcing
+ *
+ * @export
+ * @interface MongoDbSchema
+ */
 export interface MongoDbSchema {
     [key: string]: "string" | "number" | 
     "boolean" | "array" | "buffer" | 
     "date" | "ObjectId" | "mixed";
 }
 
-
+/**
+ * Connection helper class
+ *
+ * @class MongoDbConnection
+ */
 class MongoDbConnection {
     private static __inited = false;
     private static models: {[key: string]: {model: MongooseModel<Document>, schema: MongoDbSchema}} = {};
@@ -24,13 +33,14 @@ class MongoDbConnection {
             return;
         }
         this.__inited = true;
-        set('useFindAndModify', false)
+        set('useFindAndModify', false);
     }
 
     static connect() {
         this.init();
-        const params = {dbName: "ochefegastronomia", useNewUrlParser: true};
-        const mongouri = ConfigStorage.get('mongodb');
+        const mongouri = ConfigStorage.get('mongodbUri');
+        const dbName = ConfigStorage.get('mongodbDatabaseName') || 'local';
+        const params = {dbName: dbName, useNewUrlParser: true};
         return createConnection(mongouri, params);
     }
 
@@ -84,7 +94,7 @@ class MongoDbConnection {
 }
 
 
-export abstract class MongoDbModel<T extends Model> implements PersistedModel<T> {
+export abstract class MongoDbModel<T extends Model> implements PersistedModelService<T> {
     private __name: string;
     private __model: MongooseModel<Document>;
 

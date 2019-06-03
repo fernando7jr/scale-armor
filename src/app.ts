@@ -9,16 +9,24 @@ import { HeadersHandler } from './middleware/headers';
 import { LoggerHandler } from './middleware/logger';import { ConfigStorage } from './core/config';
 
 
-export type ServerApplication = Application<object>;
-export class Serverlet {
-    private __app: ServerApplication;
+export type ScaleArmorApplication = Application<object>;
+
+export class ScaleArmorServerlet {
+    private __app: ScaleArmorApplication;
     constructor() {
         this.__app = express(feathers());
     }
 
-    installRoutingProvider(routingProvider: Routing[]): Serverlet
-    installRoutingProvider(routingProvider: Routing): Serverlet
-    installRoutingProvider(routingProvider: Routing | Routing[]): Serverlet {
+    /**
+     * Install the routing provider to add its endpoints to the serverlet
+     *
+     * @param {Routing[]} routingProvider
+     * @returns {ScaleArmorServerlet}
+     * @memberof ScaleArmorServerlet
+     */
+    installRoutingProvider(routingProvider: Routing[]): ScaleArmorServerlet
+    installRoutingProvider(routingProvider: Routing): ScaleArmorServerlet
+    installRoutingProvider(routingProvider: Routing | Routing[]): ScaleArmorServerlet {
         if (Array.isArray(routingProvider)) {
             routingProvider.forEach(provider => this.installRoutingProvider(provider));
             return this;
@@ -32,10 +40,22 @@ export class Serverlet {
         return this;
     }
 
+    /**
+     * Get the `express` app
+     *
+     * @readonly
+     * @memberof ScaleArmorServerlet
+     */
     get app() {
         return this.__app;
     }
 
+    /**
+     * Setup the app with the basic configuration
+     *
+     * @returns
+     * @memberof ScaleArmorServerlet
+     */
     setup() {
         this.__app
             .configure(configuration())
@@ -44,12 +64,17 @@ export class Serverlet {
             .use(bodyParser.json())
             .use(HeadersHandler)
             .use(cors())
-            .use(LoggerHandler)
-            ;
+            .use(LoggerHandler);
         ConfigStorage.registerApp(this.__app);
         return this;
     }
 
+    /**
+     * Apply the middlewares
+     *
+     * @returns
+     * @memberof ScaleArmorServerlet
+     */
     middleware() {
         this.__app
             .use(getCatchHandler(true))

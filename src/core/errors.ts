@@ -1,4 +1,5 @@
 import errors from "@feathersjs/errors";
+
 namespace Errors {
     export type BadGateway = errors.BadGateway;
     export type BadRequest = errors.BadRequest;

@@ -2,18 +2,58 @@ import { Routing, RequestParams, ServiceHookContext } from "../core/routing";
 import { NotAuthenticated } from "@feathersjs/errors";
 import { UserAccessType, User } from "./model";
 import { AuthService } from "./service";
-import { PersistedModel } from "../core/persisted-model";
+import { PersistedModelService } from "../core/persisted-model";
+import { ConstructorOf } from "../utils";
 
 
-export abstract class AuthRoutes<TAccessType extends UserAccessType, T extends User<TAccessType>, TModel extends PersistedModel<T>> extends Routing {
+export type ConstructorOfModel<T> = ConstructorOf<PersistedModelService<T>>
+
+/**
+ * Base class for implementing your own auth routes
+ * Use getAuthHook for applying a security layer to your endpoints or
+ * use validateToken to validate the incoming tokens on your own
+ *
+ * @export
+ * @class AuthRoutes
+ * @extends {Routing}
+ * @template TAccessType
+ * @template T
+ */
+export class AuthRoutesBase<TAccessType extends UserAccessType, T extends User<TAccessType>> extends Routing {
     private service = new AuthService();
-    constructor(name?: string) {
+    constructor(private userModelClass: ConstructorOfModel<T>, name?: string) {
         super(name);
     }
 
-    protected getAuthHook(auther: this, minimAccessLevel?: TAccessType) {
+    /**
+     * Return an auth hook for endpoints
+     *
+     * @static
+     * @template TAccessType
+     * @template T
+     * @param {ConstructorOfModel<T>} userModelClass
+     * @param {TAccessType} [minimumAccessLevel]
+     * @returns {async (context: ServiceHookContext) => ServiceHookContext}
+     * @memberof AuthRoutesBase
+     */
+    static getAuthHook<TAccessType extends UserAccessType, T extends User<TAccessType>>( 
+        userModelClass: ConstructorOfModel<T>,
+        minimumAccessLevel?: TAccessType
+    ) {
+        const auther = new this(userModelClass);
+        return auther.getAuthHook(minimumAccessLevel);
+    }
+
+    /**
+     * Return an auth hook for endpoints
+     *
+     * @param {TAccessType} [minimumAccessLevel]
+     * @returns {async (context: ServiceHookContext) => ServiceHookContext}
+     * @memberof AuthRoutesBase
+     */
+    getAuthHook(minimumAccessLevel?: TAccessType) {
         return async (context: ServiceHookContext) => {
-            const authenticated = await auther.validateToken(context.params, minimAccessLevel);
+            const authenticated = await this.validateToken(context.params, minimumAccessLevel);
             if (!authenticated) {
                 throw new NotAuthenticated("Not authenticated!");
             }
@@ -21,9 +61,26 @@ export abstract class AuthRoutes<TAccessType extends UserAccessType, T extends U
         }
     }
 
-    protected abstract getModel(): TModel;
+    /**
+     * Return a new model service
+     *
+     * @protected
+     * @returns {PersistedModelService<T>}
+     * @memberof AuthRoutesBase
+     */
+    protected getModelService(): PersistedModelService<T> {
+        return new this.userModelClass();
+    }
 
-    async validateToken(params?: RequestParams, minimAccessLevel?: UserAccessType): Promise<boolean> {
+    /**
+     * Validate a given token and return it is valid or not
+     *
+     * @param {RequestParams} [params]
+     * @param {UserAccessType} [minimumAccessLevel]
+     * @returns {Promise<boolean>}
+     * @memberof AuthRoutesBase
+     */
+    async validateToken(params?: RequestParams, minimumAccessLevel?: UserAccessType): Promise<boolean> {
         if (
             !params || 
             !params.headers || 
@@ -32,8 +89,8 @@ export abstract class AuthRoutes<TAccessType extends UserAccessType, T extends U
         ) {
             return false;
         }
-        const model = this.getModel();
+        const model = this.getModelService();
         const token = this.service.newToken(params.headers.token);
-        return await this.service.validateToken(model, token, minimAccessLevel);
+        return await this.service.validateToken(model, token, minimumAccessLevel);
     }
 }
