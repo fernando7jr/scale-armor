@@ -11,7 +11,7 @@ import {
     Method, 
     Routing
 } from "./routing";
-import { PersistedModelServiceConstructor } from "./persisted-model";
+import { PersistedModelServiceConstructor, FindOptions } from "./persisted-model";
 import { NotFound, BadRequest } from "@feathersjs/errors";
 
 
@@ -34,7 +34,35 @@ export class CRUD<T> {
     }
 
     protected getQuery(params?: RequestParams): any {
-        return params ? params.query : undefined;
+        if (!params || !params.query) {
+            return undefined;
+        }
+        const query = params.query;
+        return Object.keys(query).filter(key => !key.startsWith('$')).reduce((obj, key) => {
+            obj[key] = query[key];
+            return obj;
+        }, {} as any);
+    }
+
+    protected getFindOptions(params?: RequestParams): Partial<FindOptions> | undefined {
+        // $page; $pageSize, $projection
+        if (!params || !params.query) {
+            return undefined;
+        }
+        const query = params.query;
+
+        const operators = Object.keys(query).filter(key => {
+            return key.startsWith('$')
+        }).reduce((obj, key) => {
+            obj[key] = query[key];
+            return obj;
+        }, {} as any);
+
+        return {
+            projection: operators.$projection,
+            page: operators.$page,
+            pageSize: operators.$pageSize
+        };
     }
 
     private async get(id: Id, params?: RequestParams) {
@@ -48,7 +76,9 @@ export class CRUD<T> {
 
     private async find(params?: RequestParams) {
         const model = this.newModel();
-        return await model.find(this.getQuery(params));
+        const query = this.getQuery(params);
+        const options = this.getFindOptions(params);
+        return await model.find(query, options);
     }
 
     private async create(data: Partial<T> | Array<Partial<T>>, params?: RequestParams) {
@@ -170,7 +200,16 @@ export class CRUD<T> {
     }
 }
 
-
+/**
+ * Apply endpoints to handle CRUD operations on a model
+ *
+ * @export
+ * @template M the model interface
+ * @param {string} route
+ * @param {PersistedModelServiceConstructor<M>} modelConstructor
+ * @param {Method[]} [allowedMethods]
+ * @returns
+ */
 export function CRUDMethods<M>(route: string, modelConstructor: PersistedModelServiceConstructor<M>, allowedMethods?: Method[]) {
     return function <T extends RoutingAnyConstructor>(constructor: T) {
         return <T>class extends constructor {

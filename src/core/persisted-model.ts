@@ -9,6 +9,15 @@ export interface Model {
     [key: string]: any;
 }
 
+export interface FindOneOptions {
+    projection: any;
+}
+
+export interface FindOptions extends FindOneOptions {
+    page: number;
+    pageSize: number;
+}
+
 /**
  * Model service for CRUD operations
  *
@@ -19,9 +28,9 @@ export interface Model {
 export interface PersistedModelService<T extends Model> {
     name: string;
     create(data: T | T[]): Promise<T[]>;
-    find(condition?: any, projection?: any): Promise<T[]>;
-    findOne(condition?: any, projection?: any): Promise<T | null>;
-    findById(id: any, projection?: any): Promise<T | null>;
+    find(condition?: any, options?: Partial<FindOptions>): Promise<T[]>;
+    findOne(condition?: any, options?: Partial<FindOneOptions>): Promise<T | null>;
+    findById(id: any, options?: Partial<FindOneOptions>): Promise<T | null>;
     updateMany(condition: any, data: T): Promise<{}>;
     updateOne(condition: any, data: any): Promise<{}>;
     removeMany(condition: any): Promise<{}>;

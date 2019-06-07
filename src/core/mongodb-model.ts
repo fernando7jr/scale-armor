@@ -1,8 +1,9 @@
-import { PersistedModelService, Model } from "./persisted-model";
+import { PersistedModelService, Model, FindOptions } from "./persisted-model";
 import { createConnection, Model as MongooseModel, Schema, Document, set} from "mongoose";
 import * as fs from "fs";
 import { ObjectId } from "bson";
 import { ConfigStorage } from "./config";
+import { FindOneOptions } from "mongodb";
 
 
 export { ObjectId } from "bson";
@@ -93,14 +94,32 @@ class MongoDbConnection {
     }
 }
 
-
-export abstract class MongoDbModel<T extends Model> implements PersistedModelService<T> {
+/**
+ * Persisted model service for MongoDB
+ *
+ * @export
+ * @abstract
+ * @class MongoDbModelService
+ * @implements {PersistedModelService<T>}
+ * @template T model interface
+ */
+export abstract class MongoDbModelService<T extends Model> implements PersistedModelService<T> {
     private __name: string;
     private __model: MongooseModel<Document>;
 
-    constructor(name: string, schema?: MongoDbSchema | string) {
-        this.__name = name;
-        this.__model = MongoDbConnection.modelFor(this.__name, this.__name, schema);
+    /**
+     * Creates an instance of MongoDbModelService.
+     * @param {string} collectionName
+     * @param {(MongoDbSchema | string)} [schema]
+     * @memberof MongoDbModelService
+     */
+    constructor(collectionName: string, schema?: MongoDbSchema | string) {
+        this.__name = collectionName;
+        this.__model = MongoDbConnection.modelFor(
+            this.__name,
+            this.__name,
+            schema
+        );
     }
 
     public static Id(id?: string | ObjectId) {
@@ -115,6 +134,12 @@ export abstract class MongoDbModel<T extends Model> implements PersistedModelSer
         }
     }
 
+    /**
+     * Get the collection name
+     *
+     * @readonly
+     * @memberof MongoDbModelService
+     */
     get name() {
         return this.__name;
     }
@@ -128,10 +153,12 @@ export abstract class MongoDbModel<T extends Model> implements PersistedModelSer
         })
     }
 
-    findById(id: any, projection?: any): Promise<T | null> {
+    findById(id: any, options?: FindOneOptions): Promise<T | null> {
+        options = options || {};
+        const projection = options.projection;
         return new Promise((resolve, reject) => {
             if (typeof id === 'string') {
-                id = MongoDbModel.TryCastToId(id);
+                id = MongoDbModelService.TryCastToId(id);
             }
             this.__model.findById(id, projection).lean().exec((error: any, data: any) =>  {
                 if (error) return reject(error);
@@ -141,7 +168,17 @@ export abstract class MongoDbModel<T extends Model> implements PersistedModelSer
         });
     }
 
-    findOne(condition?: any, projection?: any): Promise<T | null> {
+    /**
+     * Find one document
+     *
+     * @param {*} [condition] mongoDB find query
+     * @param {FindOneOptions} [options]
+     * @returns {(Promise<T | null>)}
+     * @memberof MongoDbModelService
+     */
+    findOne(condition?: any, options?: FindOneOptions): Promise<T | null> {
+        options = options || {};
+        const projection = options.projection;
         return new Promise((resolve, reject) => {
             this.__model.findOne(condition, projection).lean().exec((error: any, data: any) => {
                 if (error) return reject(error);
@@ -150,12 +187,32 @@ export abstract class MongoDbModel<T extends Model> implements PersistedModelSer
         });
     }
 
-    find(condition?: any, projection?: any): Promise<T[]> {
+    /**
+     * Find
+     *
+     * @param {*} [condition]
+     * @param {FindOptions} [options]
+     * @returns {Promise<T[]>}
+     * @memberof MongoDbModelService
+     */
+    find(condition?: any, options?: FindOptions): Promise<T[]> {
+        options = options || {} as FindOptions;
+        const projection = options.projection;
+        const page = options.pageSize;
+        const pageSize = options.pageSize;
+
+        const limit = pageSize || 50;
+        const skip = (page || 0) * limit;
+
         return new Promise((resolve, reject) => {
-            this.__model.find(condition, projection).lean().exec((error: any, data: any) => {
-                if (error) return reject(error);;
-                resolve(data);
-            });
+            this.__model.find(condition, projection)
+                .skip(skip)
+                .limit(limit)
+                .lean()
+                .exec((error: any, data: any) => {
+                    if (error) return reject(error);;
+                    resolve(data);
+                });
         });
     }
 
@@ -204,6 +261,13 @@ export abstract class MongoDbModel<T extends Model> implements PersistedModelSer
         });
     }
 
+    /**
+     * Aggregation
+     *
+     * @param {any[]} [aggregation] aggregation pipeline
+     * @returns {Promise<any[]>}
+     * @memberof MongoDbModelService
+     */
     aggregate(aggregation?: any[]): Promise<any[]> {
         return new Promise((resolve, reject) => {
             this.__model.aggregate(aggregation).then(resolve).catch(reject);
