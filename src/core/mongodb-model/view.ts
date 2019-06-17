@@ -21,7 +21,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
         const proj = this.__copyProjection();
         options = options || {} as FindOneOptions;
         options.projection = Object.assign(proj, options.projection || {});
-        return this.findById(id, options);
+        return super.findById(id, options);
     }
 
     /**
@@ -36,7 +36,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
         const proj = this.__copyProjection();
         options = options || {} as FindOneOptions;
         options.projection = Object.assign(proj, options.projection || {});
-        return this.findOne(condition, options);
+        return super.findOne(condition, options);
     }
 
     /**
@@ -51,7 +51,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
         const proj = this.__copyProjection();
         options = options || {} as FindOptions;
         options.projection = Object.assign(proj, options.projection || {});
-        return this.find(condition, options);
+        return super.find(condition, options);
     }
 
     /**
