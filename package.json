@@ -1,6 +1,6 @@
 {
   "name": "scale-armor",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Easy and simple scalable node restful api framework",
   "main": "./dist/index.js",
   "scripts": {
