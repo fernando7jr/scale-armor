@@ -1,6 +1,6 @@
 {
   "name": "scale-armor",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Easy and simple scalable node restful api framework",
   "main": "./dist/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "build": "tsc"
   },
   "author": {
-    "name": "Fernando Roberto Setti Junior",
+    "name": "metadeta96@gmail.com",
     "email": "fernando.settijunior@gmail.com"
   },
   "repository": {
@@ -44,5 +44,15 @@
     "helmet": "^3.13.0",
     "jwt-simple": "^0.5.1",
     "mongoose": "^5.2.14"
-  }
+  },
+  "keywords": [
+    "api", 
+    "rest", 
+    "mongodb", 
+    "mongo", 
+    "json", 
+    "framework", 
+    "backend",
+    "node"
+  ]
 }

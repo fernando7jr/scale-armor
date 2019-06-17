@@ -20,8 +20,8 @@ export type ConstructorOfModel<T> = ConstructorOf<PersistedModelService<T>>
  * @template T
  */
 export class AuthRoutesBase<TAccessType extends UserAccessType, T extends User<TAccessType>> extends Routing {
-    private service = new AuthService();
-    constructor(private userModelClass: ConstructorOfModel<T>, name?: string) {
+    protected service = new AuthService();
+    protected constructor(private userModelClass: ConstructorOfModel<T>, name?: string) {
         super(name);
     }
 
