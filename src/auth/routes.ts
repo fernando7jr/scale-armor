@@ -89,8 +89,18 @@ export class AuthRoutesBase<TAccessType extends UserAccessType, T extends User<T
         ) {
             return false;
         }
-        const model = this.getModelService();
         const token = this.service.newToken(params.headers.token);
-        return await this.service.validateToken(model, token, minimumAccessLevel);
+        const model = this.getModelService();
+        const user_id = token.decode().z;
+        const user = await model.findById(user_id);
+        if (!user) {
+            return false;
+        }
+        const hasAccess = await this.service.hasAccess(user, minimumAccessLevel);
+        if (!hasAccess) {
+            return false;
+        }
+        params.user = user;
+        return true;
     }
 }

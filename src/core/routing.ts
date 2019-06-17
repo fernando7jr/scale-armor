@@ -2,7 +2,7 @@ import { ServiceMethods, Id, Params, Paginated, NullableId, HookContext, HooksOb
 import { GeneralError } from "@feathersjs/errors";
 // import "reflect-metadata";
 
-export type RequestParams = Params & {
+export type RequestParams<TUser=any> = Params & {
     headers: {
         [key: string]: string | undefined;
         host?: string;
@@ -13,7 +13,8 @@ export type RequestParams = Params & {
         "user-agent"?: string;
         "accept-encoding"?: string;
         "accept-language"?: string;
-    }
+    },
+    user?: TUser
 };
 
 export type ServiceHookContext = HookContext & {params: RequestParams};

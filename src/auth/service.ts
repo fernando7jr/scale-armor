@@ -55,17 +55,14 @@ export class AuthService<TAccessType extends UserAccessType, T extends User<TAcc
     }
 
     /**
-     * Validate the token is valid or not
+     * Verify the user has enough access to a resource
      *
-     * @param {TModel} model
-     * @param {Token} token
-     * @param {TAccessType} [minimAccessLevel]
-     * @returns {Promise<boolean>}
+     * @param {User<TAccessType>} user
+     * @param {TAccessType} [minimAccessLevel] minimum access level for the resource
+     * @returns {boolean}
      * @memberof AuthService
      */
-    async validateToken(model: TModel, token: Token, minimAccessLevel?: TAccessType): Promise<boolean> {
-        const user_id = token.decode().z;
-        const user = await model.findById(user_id);
+    hasAccess(user: User<TAccessType>, minimAccessLevel?: TAccessType): boolean {
         minimAccessLevel = minimAccessLevel || UserAccessType.None as TAccessType;
         if (!user) {
             return false;

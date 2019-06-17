@@ -94,7 +94,7 @@ export class Token {
     }
 
     /**
-     * Decode the token and retrieve teh payload
+     * Decode the token and retrieve the payload
      *
      * @returns {TokenPayload}
      * @memberof Token
