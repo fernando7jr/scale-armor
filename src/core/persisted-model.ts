@@ -16,6 +16,8 @@ export interface FindOneOptions {
 export interface FindOptions extends FindOneOptions {
     page: number;
     pageSize: number;
+    sortBy: string; 
+    sortType: 1|-1;
 }
 
 /**

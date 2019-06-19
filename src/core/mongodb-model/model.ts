@@ -121,12 +121,19 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
         const projection = options.projection;
         const page = options.pageSize;
         const pageSize = options.pageSize;
-
         const limit = pageSize || 50;
         const skip = (page || 0) * limit;
 
+        const sortBy = options.sortBy;
+        const sortType = options.sortType || 1;
+        const sort: any = {};
+        if (sortBy) {
+            sort[sortBy] = sortType;
+        }
+
         return new Promise((resolve, reject) => {
             this.__model.find(condition, projection)
+                .sort(sort)
                 .skip(skip)
                 .limit(limit)
                 .lean()
