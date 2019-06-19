@@ -35,7 +35,15 @@ export interface ServiceRoute<T> extends ServiceMethods<T> {
     after?: ServiceHook,
     error?: ServiceHook
 }
-export type FindMethod<T> = (params?: RequestParams) => Promise<T[] | Paginated<T>>;
+
+export interface ScaleArmorPaginated<T> {
+    data: T[]|any,
+    page: number,
+    lastPage: number,
+    total: number
+}
+
+export type FindMethod<T> = (params?: RequestParams) => Promise<T[] | Paginated<T>| ScaleArmorPaginated<T>>;
 export type GetMethod<T> = (id: Id, params?: RequestParams) => Promise<T>;
 export type CreateMethod<T> = (data: Partial<T> | Array<Partial<T>>, params?: RequestParams) => Promise<T | T[]>;
 export type UpdateMethod<T> = (id: NullableId, data: T, params?: RequestParams) => Promise<T>;

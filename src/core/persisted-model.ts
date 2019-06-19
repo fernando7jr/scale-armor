@@ -38,6 +38,7 @@ export interface PersistedModelService<T extends Model> {
     removeMany(condition: any): Promise<{}>;
     removeOne(condition: any): Promise<{}>;
     replaceOne(id: any, replacement: T): Promise<T>;
+    count(condition?: any): Promise<number>;
 }
 
 

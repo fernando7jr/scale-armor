@@ -201,4 +201,23 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
             this.__model.aggregate(aggregation).then(resolve).catch(reject);
         });
     }
+
+    /**
+     * Count
+     *
+     * @param {*} [condition]
+     * @returns {Promise<T[]>}
+     * @memberof MongoDbModelService
+     */
+    count(condition?: any): Promise<number> {
+        
+        return new Promise((resolve, reject) => {
+            this.__model.find(condition)
+                .count()
+                .exec((error: any, data: any) => {
+                    if (error) return reject(error);;
+                    resolve(data);
+                });
+        });
+    }
 }

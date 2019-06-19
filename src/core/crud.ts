@@ -11,7 +11,7 @@ import {
     Method, 
     Routing
 } from "./routing";
-import { PersistedModelServiceConstructor, FindOptions } from "./persisted-model";
+import { PersistedModelServiceConstructor, FindOptions, PersistedModelService } from "./persisted-model";
 import { NotFound, BadRequest } from "@feathersjs/errors";
 
 
@@ -45,7 +45,7 @@ export class CRUD<T> {
     }
 
     protected getFindOptions(params?: RequestParams): Partial<FindOptions> | undefined {
-        // $page; $pageSize, $projection
+        // $page; $pageSize, $projection, $sortBy, $sortType
         if (!params || !params.query) {
             return undefined;
         }
@@ -61,7 +61,9 @@ export class CRUD<T> {
         return {
             projection: operators.$projection,
             page: operators.$page,
-            pageSize: operators.$pageSize
+            pageSize: operators.$pageSize,
+            sortBy: operators.$sortBy,
+            sortType: operators.$sortType
         };
     }
 
@@ -74,11 +76,24 @@ export class CRUD<T> {
         return entry;
     }
 
+    private async baseFindReturn(model:PersistedModelService<T>, query: any, options: Partial<FindOptions>) {
+        const data = await model.find(query, options);
+        const total: number|any = await model.count(query);
+        const page: number|any = (options && options.page) ? options.page : 1;
+        const pageSize: number|any = (options && options.pageSize) ? options.pageSize : 50;
+        return {
+            data: data,
+            page: page,
+            lastPage: total/pageSize,
+            total: total
+        }
+    }
+
     private async find(params?: RequestParams) {
         const model = this.newModel();
         const query = this.getQuery(params);
-        const options = this.getFindOptions(params);
-        return await model.find(query, options);
+        const options: any = this.getFindOptions(params);
+        return await this.baseFindReturn(model, query, options);
     }
 
     private async create(data: Partial<T> | Array<Partial<T>>, params?: RequestParams) {
