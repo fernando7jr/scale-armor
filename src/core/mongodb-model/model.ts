@@ -119,7 +119,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
     find(condition?: any, options?: FindOptions): Promise<T[]> {
         options = options || {} as FindOptions;
         const projection = options.projection;
-        const page = options.pageSize;
+        const page = options.page;
         const pageSize = options.pageSize;
         const limit = pageSize || 50;
         const skip = (page || 0) * limit;
