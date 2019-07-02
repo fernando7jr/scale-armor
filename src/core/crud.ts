@@ -38,8 +38,15 @@ export class CRUD<T> {
             return undefined;
         }
         const query = params.query;
+        const valueConvertionMap: {[key: string]: (value: string) => any} = {
+            '$page': (value: string) => value && parseInt(value, 10),
+            '$pageSize': (value: string) => value && parseInt(value, 10),
+        }
+        const defaultConverter = (value: T) => value;
+
         return Object.keys(query).filter(key => !key.startsWith('$')).reduce((obj, key) => {
-            obj[key] = query[key];
+            const converter = valueConvertionMap[key] && defaultConverter;
+            obj[key] = converter(query[key]);
             return obj;
         }, {} as any);
     }
