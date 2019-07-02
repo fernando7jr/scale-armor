@@ -38,15 +38,9 @@ export class CRUD<T> {
             return undefined;
         }
         const query = params.query;
-        const valueConvertionMap: {[key: string]: (value: string) => any} = {
-            '$page': (value: string) => value && parseInt(value, 10),
-            '$pageSize': (value: string) => value && parseInt(value, 10),
-        }
-        const defaultConverter = (value: T) => value;
-
+        
         return Object.keys(query).filter(key => !key.startsWith('$')).reduce((obj, key) => {
-            const converter = valueConvertionMap[key] || defaultConverter;
-            obj[key] = converter(query[key]);
+            obj[key] = query[key];
             return obj;
         }, {} as any);
     }
@@ -65,10 +59,14 @@ export class CRUD<T> {
             return obj;
         }, {} as any);
 
+        if (operators.$sortType) {
+            operators.$sortType = operators.$sortType > 1 ? 1 : -1;
+        }
+
         return {
             projection: operators.$projection,
-            page: operators.$page,
-            pageSize: operators.$pageSize,
+            page: operators.$page && parseInt(operators.$page, 10),
+            pageSize: operators.$pageSize && parseInt(operators.$pageSize, 10),
             sortBy: operators.$sortBy,
             sortType: operators.$sortType
         };
