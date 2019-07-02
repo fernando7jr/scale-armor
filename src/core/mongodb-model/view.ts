@@ -2,6 +2,13 @@ import { Model, FindOneOptions, FindOptions } from "../persisted-model";
 import { MongoDbModelService } from "./model";
 import { ConstructorOf } from "../../utils";
 
+export type ProjectionOf<T> = {
+    [key in keyof T]: any
+} & {
+    [key: string]: any
+};
+
+
 export abstract class MongoDbModelView<T extends Model> extends MongoDbModelService<T> {
     protected abstract readonly projection: any;
 
@@ -64,13 +71,13 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
      * @returns
      * @memberof MongoDbModelView
      */
-    static viewOf<T extends Model>(collectionName: string, projection: any) {
+    static viewOf<T extends Model>(collectionName: string, projection: ProjectionOf<T>) {
         return class extends MongoDbModelView<T> {
             projection = projection;
 
             constructor() {
                 super(collectionName);
             }
-        } as ConstructorOf<MongoDbModelView<T>>
+        } as ConstructorOf<MongoDbModelView<ProjectionOf<T>>>
     }
 }
