@@ -45,7 +45,7 @@ export class CRUD<T> {
         const defaultConverter = (value: T) => value;
 
         return Object.keys(query).filter(key => !key.startsWith('$')).reduce((obj, key) => {
-            const converter = valueConvertionMap[key] && defaultConverter;
+            const converter = valueConvertionMap[key] || defaultConverter;
             obj[key] = converter(query[key]);
             return obj;
         }, {} as any);
