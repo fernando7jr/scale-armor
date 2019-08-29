@@ -144,18 +144,18 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
         });
     }
 
-    updateMany(condition: any, data: T): Promise<{}> {
+    updateMany(condition: any, data: T, options: any): Promise<{}> {
         return new Promise((resolve, reject) => {
-            this.__model.updateMany(condition, data).lean().exec((error: any, data: any) => {
+            this.__model.updateMany(condition, data, options).lean().exec((error: any, data: any) => {
                 if (error) return reject(error);
                 resolve(data);
             });
         });
     }
 
-    updateOne(condition: any, data: any): Promise<{}> {
+    updateOne(condition: any, data: any, options: any): Promise<{}> {
         return new Promise((resolve, reject) => {
-            this.__model.updateOne(condition, data, (error: any, data: any) => {
+            this.__model.updateOne(condition, data, options, (error: any, data: any) => {
                 if (error) return reject(error);
                 resolve(data);
             });
@@ -213,7 +213,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
         
         return new Promise((resolve, reject) => {
             this.__model.find(condition)
-                .count()
+                .countDocuments()
                 .exec((error: any, data: any) => {
                     if (error) return reject(error);;
                     resolve(data);

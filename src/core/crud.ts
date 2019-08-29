@@ -21,6 +21,16 @@ export interface RoutingAnyConstructor {
 
 export class CRUD<T> {
     private __modelConstructor: PersistedModelServiceConstructor<T>;
+
+    private queryOperator = {
+        '$or': true,
+        '$and': true,
+        '$nor': true,
+        '$expr': true,
+        '$text': true,
+        '$where': true
+    }
+
     constructor (modelConstructor: PersistedModelServiceConstructor<T>) {
         this.__modelConstructor = modelConstructor;
     }
@@ -39,7 +49,10 @@ export class CRUD<T> {
         }
         const query = params.query;
         
-        return Object.keys(query).filter(key => !key.startsWith('$')).reduce((obj, key) => {
+        return Object.keys(query).filter(key => (
+            (!key.startsWith('$')) ||
+            (key in this.queryOperator)
+        )).reduce((obj, key) => {
             obj[key] = query[key];
             return obj;
         }, {} as any);

@@ -1,12 +1,13 @@
 {
   "name": "scale-armor",
-  "version": "0.1.16",
+  "version": "0.2.0",
   "description": "Easy and simple scalable node restful api framework",
   "main": "./dist/index.js",
   "scripts": {
     "tsc": "tsc",
     "type-check": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "prepack": "npm run build"
   },
   "author": {
     "name": "metadeta96@gmail.com",
