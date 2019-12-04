@@ -96,12 +96,11 @@ export class CRUD<T> {
 
     private async baseFindReturn(model:PersistedModelService<T>, query: any, options: Partial<FindOptions>) {
         const data = await model.find(query, options);
-        const totalCollectiion: number|any = await model.count(query);
+        const totalCollection: number|any = await model.count(query);
         const page: number|any = (options && options.page) ? options.page : 1;
         const pageSize: number|any = (options && options.pageSize) ? options.pageSize : 50;
-        const total = totalCollectiion/pageSize;
-        const totalRound = Math.round(total);
-        const lastPage = totalRound > total ? total : totalRound + 1; 
+        const total = totalCollection/pageSize;
+        const lastPage = Math.ceil(total);
         return {
             data: data,
             page: page,
