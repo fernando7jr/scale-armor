@@ -1,6 +1,6 @@
 {
   "name": "scale-armor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Easy and simple scalable node restful api framework",
   "main": "./dist/index.js",
   "scripts": {
@@ -44,15 +44,22 @@
     "cors": "^2.8.4",
     "helmet": "^3.13.0",
     "jwt-simple": "^0.5.1",
-    "mongoose": "^5.2.14"
+    "mongoose": "^5.2.14",
+    "@types/cors": "^2.8.4",
+    "@types/feathersjs__configuration": "^1.0.1",
+    "@types/feathersjs__errors": "^3.2.1",
+    "@types/feathersjs__express": "^1.1.4",
+    "@types/feathersjs__feathers": "^3.0.4",
+    "@types/jwt-simple": "^0.5.33",
+    "@types/mongoose": "^5.2.7"
   },
   "keywords": [
-    "api", 
-    "rest", 
-    "mongodb", 
-    "mongo", 
-    "json", 
-    "framework", 
+    "api",
+    "rest",
+    "mongodb",
+    "mongo",
+    "json",
+    "framework",
     "backend",
     "node"
   ]
