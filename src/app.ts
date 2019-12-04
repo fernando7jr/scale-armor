@@ -57,7 +57,7 @@ export class ScaleArmorServerlet {
      * @memberof ScaleArmorServerlet
      */
     setup() {
-        this.__app
+        (this.__app as any)
             .configure(configuration())
             .configure(express.rest())
             .use(bodyParser.urlencoded({extended: true}))

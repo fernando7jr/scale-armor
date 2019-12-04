@@ -43,7 +43,8 @@ export class MongoDbConnection {
     }
 
     static loadSchema(schemaName: string): MongoDbSchema {
-        return fs.readFileSync(schemaName).toJSON().data[0];
+        const schema = fs.readFileSync(schemaName).toString();
+        return JSON.parse(schema).data[0];
     }
 
     static translateSchema(schema: MongoDbSchema) {
