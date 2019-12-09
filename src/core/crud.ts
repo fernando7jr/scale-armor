@@ -1,7 +1,8 @@
 import { Id, NullableId } from "@feathersjs/feathers";
 import { 
     GetMethod, 
-    FindMethod, 
+    FindMethod,
+    FindPostMethod,
     CreateMethod, 
     UpdateMethod, 
     RemoveMethod, 
@@ -11,12 +12,24 @@ import {
     Method, 
     Routing
 } from "./routing";
-import { PersistedModelServiceConstructor, FindOptions, PersistedModelService } from "./persisted-model";
+import {
+    PersistedModelServiceConstructor,
+    FindOptions,
+    PersistedModelService,
+    Model
+} from "./persisted-model";
 import { NotFound, BadRequest } from "@feathersjs/errors";
 
 
 export interface RoutingAnyConstructor {
     new(...args: any[]): Routing;
+}
+
+export interface PagedData<T extends Model> {
+    data: T[];
+    page: number;
+    lastPage: number;
+    total: number;
 }
 
 export class CRUD<T> {
@@ -94,7 +107,11 @@ export class CRUD<T> {
         return entry;
     }
 
-    private async baseFindReturn(model:PersistedModelService<T>, query: any, options: Partial<FindOptions>) {
+    private async baseFindReturn(
+        model: PersistedModelService<T>,
+        query: any,
+        options: Partial<FindOptions>
+    ): Promise<PagedData<T>> {
         const data = await model.find(query, options);
         const totalCollection: number|any = await model.count(query);
         const page: number|any = (options && options.page) ? options.page : 1;
@@ -112,6 +129,13 @@ export class CRUD<T> {
     private async find(params?: RequestParams) {
         const model = this.newModel();
         const query = this.getQuery(params);
+        const options: any = this.getFindOptions(params);
+        return await this.baseFindReturn(model, query, options);
+    }
+
+    private async findPost(data: Partial<T>, params?: RequestParams) {
+        const model = this.newModel();
+        const query = Object.assign({}, data || {}, this.getQuery(params));
         const options: any = this.getFindOptions(params);
         return await this.baseFindReturn(model, query, options);
     }
@@ -156,6 +180,14 @@ export class CRUD<T> {
             route: route,
             method: Method.Find,
             func: (params?: RequestParams) => this.find(params)
+        }
+    }
+    
+    FindPost(route: string): {route: string, method: Method, func: FindPostMethod<T>} {
+        return {
+            route: route,
+            method: Method.Create,
+            func: (data: Partial<T>, params?: RequestParams) => this.findPost(data, params)
         }
     }
 
@@ -213,6 +245,10 @@ export class CRUD<T> {
                     endpoint = this.Find(route);
                     arr.push(endpoint);
                     break;
+                case Method.FindPost:
+                    endpoint = this.FindPost(route);
+                    arr.push(endpoint);
+                    break;
                 case Method.Get:
                     endpoint = this.Get(route);
                     arr.push(endpoint);
@@ -255,4 +291,9 @@ export function CRUDMethods<M>(route: string, modelConstructor: PersistedModelSe
             }
         }
     };
+}
+
+
+export function CRUDFindPost<M>(route: string, modelConstructor: PersistedModelServiceConstructor<M>) {
+    return CRUDMethods(route, modelConstructor, [Method.FindPost]);
 }
