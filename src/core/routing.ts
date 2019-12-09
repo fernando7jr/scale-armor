@@ -1,4 +1,13 @@
-import { ServiceMethods, Id, Params, Paginated, NullableId, HookContext, HooksObject, HookMap } from "@feathersjs/feathers";
+import { 
+    ServiceMethods,
+    Id,
+    Params,
+    Paginated,
+    NullableId,
+    HookContext,
+    HooksObject,
+    HookMap
+} from "@feathersjs/feathers";
 import { GeneralError } from "@feathersjs/errors";
 // import "reflect-metadata";
 
@@ -44,12 +53,14 @@ export interface ScaleArmorPaginated<T> {
 }
 
 export type FindMethod<T> = (params?: RequestParams) => Promise<T[] | Paginated<T>| ScaleArmorPaginated<T>>;
+export type FindPostMethod<T> = (data: Partial<T>, params?: RequestParams) => Promise<T[] | Paginated<T>| ScaleArmorPaginated<T>>;
 export type GetMethod<T> = (id: Id, params?: RequestParams) => Promise<T>;
 export type CreateMethod<T> = (data: Partial<T> | Array<Partial<T>>, params?: RequestParams) => Promise<T | T[]>;
 export type UpdateMethod<T> = (id: NullableId, data: T, params?: RequestParams) => Promise<T>;
 export type PatchMethod<T> = (id: NullableId, data: Partial<T>, params?: RequestParams) => Promise<T>;
 export type RemoveMethod<T> = (id: NullableId, params?: RequestParams) => Promise<T>;
-export type ServiceMethod<T> = FindMethod<T> | 
+export type ServiceMethod<T> = FindMethod<T> |
+                               FindPostMethod<T> |
                                GetMethod<T> | 
                                CreateMethod<T> | 
                                UpdateMethod<T> | 
@@ -59,6 +70,7 @@ export type ServiceMethod<T> = FindMethod<T> |
 
 export enum Method {
     Find,
+    FindPost,
     Get,
     Create,
     Update,
