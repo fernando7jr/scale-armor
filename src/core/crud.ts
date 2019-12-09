@@ -294,6 +294,6 @@ export function CRUDMethods<M>(route: string, modelConstructor: PersistedModelSe
 }
 
 
-export function FindPostMethod<M>(route: string, modelConstructor: PersistedModelServiceConstructor<M>) {
+export function CRUDFindPost<M>(route: string, modelConstructor: PersistedModelServiceConstructor<M>) {
     return CRUDMethods(route, modelConstructor, [Method.FindPost]);
 }
