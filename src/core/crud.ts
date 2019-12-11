@@ -269,6 +269,17 @@ export class CRUD<T> {
             return arr;
         }, []);
     }
+
+    static async paginate<T>(
+        modelConstructor: PersistedModelServiceConstructor<T>,
+        query: any,
+        params?: RequestParams
+    ) {
+        const self = new this<T>(modelConstructor);
+        const options: any = self.getFindOptions(params);
+        const model = self.newModel();
+        return await self.baseFindReturn(model, query, options);
+    }
 }
 
 /**
@@ -296,4 +307,16 @@ export function CRUDMethods<M>(route: string, modelConstructor: PersistedModelSe
 
 export function CRUDFindPost<M>(route: string, modelConstructor: PersistedModelServiceConstructor<M>) {
     return CRUDMethods(route, modelConstructor, [Method.FindPost]);
+}
+
+
+/*
+ * Do a paginated find for the given query and pagination params
+ */
+export async function findPaginated<T extends Model>(
+    modelConstructor: PersistedModelServiceConstructor<T>,
+    query: any,
+    params?: RequestParams
+) {
+    return await CRUD.paginate(modelConstructor, query, params);
 }
