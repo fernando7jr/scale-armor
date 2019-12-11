@@ -311,7 +311,7 @@ export function CRUDFindPost<M>(route: string, modelConstructor: PersistedModelS
 
 
 /*
- * Do a paaginated find for the given query and pagination params
+ * Do a paginated find for the given query and pagination params
  */
 export async function findPaginated<T extends Model>(
     modelConstructor: PersistedModelServiceConstructor<T>,
