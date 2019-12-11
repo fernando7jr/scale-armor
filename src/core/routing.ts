@@ -172,6 +172,9 @@ export class Routing {
     public static Find(route: string) {
         return this.__decorator(route, Method.Find) as any;
     }
+    public static FindPost(route: string) {
+        return this.__decorator(route, Method.FindPost) as any;
+    }
     public static Get(route: string) {
         return this.__decorator(route, Method.Get) as any;
     }
@@ -232,6 +235,15 @@ export class Routing {
                 break;
             case Method.Find:
                 service.find = <FindMethod<any>>func;
+                // if (this.before && service.before) {
+                //     service.before.find = [this.before];
+                // }
+                // if (this.after && service.after) {
+                //     service.after.find = [this.after];
+                // }
+                break;
+            case Method.FindPost:
+                service.create = <FindPostMethod<any>>func;
                 // if (this.before && service.before) {
                 //     service.before.find = [this.before];
                 // }
