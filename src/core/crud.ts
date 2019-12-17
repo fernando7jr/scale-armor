@@ -122,7 +122,7 @@ export class CRUD<T> {
             data: data,
             page: page,
             lastPage: lastPage,
-            total: total
+            total: totalCollection
         }
     }
 
