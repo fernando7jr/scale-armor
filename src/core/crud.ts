@@ -86,7 +86,7 @@ export class CRUD<T> {
         }, {} as any);
 
         if (operators.$sortType) {
-            operators.$sortType = operators.$sortType > 1 ? 1 : -1;
+            operators.$sortType = operators.$sortType >= 1 ? 1 : -1;
         }
 
         return {

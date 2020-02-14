@@ -24,7 +24,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
      * @returns {(Promise<T | null>)}
      * @memberof MongoDbModelService
      */
-    findById(id: any, options?: FindOneOptions): Promise<T | null> {
+    findById(id: any, options?: Partial<FindOneOptions>): Promise<T | null> {
         const proj = this.__copyProjection();
         options = options || {} as FindOneOptions;
         options.projection = Object.assign(proj, options.projection || {});
@@ -39,7 +39,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
      * @returns {(Promise<T | null>)}
      * @memberof MongoDbModelService
      */
-    findOne(condition?: any, options?: FindOneOptions): Promise<T | null> {
+    findOne(condition?: any, options?: Partial<FindOneOptions>): Promise<T | null> {
         const proj = this.__copyProjection();
         options = options || {} as FindOneOptions;
         options.projection = Object.assign(proj, options.projection || {});
@@ -54,7 +54,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
      * @returns {Promise<T[]>}
      * @memberof MongoDbModelService
      */
-    find(condition?: any, options?: FindOptions): Promise<T[]> {
+    find(condition?: any, options?: Partial<FindOptions>): Promise<T[]> {
         const proj = this.__copyProjection();
         options = options || {} as FindOptions;
         options.projection = Object.assign(proj, options.projection || {});
@@ -71,7 +71,7 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
      * @returns
      * @memberof MongoDbModelView
      */
-    static viewOf<T extends Model>(collectionName: string, projection: ProjectionOf<T>) {
+    static viewOf<T extends Model>(collectionName: string, projection?: ProjectionOf<T>) {
         return class extends MongoDbModelView<T> {
             projection = projection;
 

@@ -74,7 +74,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
      * @returns {(Promise<T | null>)}
      * @memberof MongoDbModelService
      */
-    findById(id: any, options?: FindOneOptions): Promise<T | null> {
+    findById(id: any, options?: Partial<FindOneOptions>): Promise<T | null> {
         options = options || {};
         const projection = options.projection;
         return new Promise((resolve, reject) => {
@@ -97,7 +97,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
      * @returns {(Promise<T | null>)}
      * @memberof MongoDbModelService
      */
-    findOne(condition?: any, options?: FindOneOptions): Promise<T | null> {
+    findOne(condition?: any, options?: Partial<FindOneOptions>): Promise<T | null> {
         options = options || {};
         const projection = options.projection;
         return new Promise((resolve, reject) => {
@@ -116,7 +116,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
      * @returns {Promise<T[]>}
      * @memberof MongoDbModelService
      */
-    find(condition?: any, options?: FindOptions): Promise<T[]> {
+    find(condition?: any, options?: Partial<FindOptions>): Promise<T[]> {
         options = options || {} as FindOptions;
         const projection = options.projection;
         const page = options.page;
@@ -144,7 +144,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
         });
     }
 
-    updateMany(condition: any, data: T, options: any): Promise<{}> {
+    updateMany(condition: any, data: T, options?: any): Promise<{}> {
         return new Promise((resolve, reject) => {
             this.__model.updateMany(condition, data, options).lean().exec((error: any, data: any) => {
                 if (error) return reject(error);
@@ -153,7 +153,7 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
         });
     }
 
-    updateOne(condition: any, data: any, options: any): Promise<{}> {
+    updateOne(condition: any, data: any, options?: any): Promise<{}> {
         return new Promise((resolve, reject) => {
             this.__model.updateOne(condition, data, options, (error: any, data: any) => {
                 if (error) return reject(error);
@@ -199,6 +199,19 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
     aggregate(aggregation?: any[]): Promise<any[]> {
         return new Promise((resolve, reject) => {
             this.__model.aggregate(aggregation).then(resolve).catch(reject);
+        });
+    }
+
+    /**
+     * Distinct
+     *
+     * @param {any[]} [distinction]
+     * @returns {Promise<any[]>}
+     * @memberof MongoDbModelService
+     */
+    distinct(distinction: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            this.__model.distinct(distinction).then(resolve).catch(reject);
         });
     }
 
