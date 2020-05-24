@@ -38,7 +38,7 @@ export class MongoDbConnection {
         this.init();
         const mongouri = ConfigStorage.get('mongodbUri');
         const dbName = ConfigStorage.get('mongodbDatabaseName') || 'local';
-        const params = {dbName: dbName, useNewUrlParser: true};
+        const params = {dbName: dbName, useNewUrlParser: true, useUnifiedTopology: true};
         return createConnection(mongouri, params);
     }
 
