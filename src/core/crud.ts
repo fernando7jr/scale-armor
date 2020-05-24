@@ -114,7 +114,7 @@ export class CRUD<T> {
     ): Promise<PagedData<T>> {
         const data = await model.find(query, options);
         const totalCollection: number|any = await model.count(query);
-        const page: number|any = (options && options.page) ? options.page : 1;
+        const page: number|any = (options && options.page) ? options.page : 0;
         const pageSize: number|any = (options && options.pageSize) ? options.pageSize : 50;
         const total = totalCollection/pageSize;
         const lastPage = Math.ceil(total);
