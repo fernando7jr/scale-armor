@@ -1,0 +1,48 @@
+{
+  "name": "scale-armor",
+  "version": "2.0.0-rc",
+  "description": "Easy and simple scalable node restful api framework",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "tsc": "tsc",
+    "type-check": "tsc --noEmit",
+    "build": "tsc",
+    "prepack": "npm run build",
+    "mocha": "mocha",
+    "test": "mocha -r ts-node/register src/**/*.spec.ts"
+  },
+  "author": {
+    "name": "metadeta96",
+    "email": "fernando.settijunior@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metadeta96/scale-armor.git"
+  },
+  "license": "GNU GPLv3",
+  "devDependencies": {
+    "@types/chai": "^4.1.3",
+    "@types/mocha": "^5.2.0",
+    "@types/node": "^14.0.5",
+    "chai": "^4.1.2",
+    "mocha": "^7.2.0",
+    "ts-node": "^6.2.0",
+    "typescript": "^3.9.3"
+  },
+  "dependencies": {
+    "mongodb": "^3.5.7",
+    "qs": "^6.9.4"
+  },
+  "keywords": [
+    "api",
+    "rest",
+    "restful",
+    "mongodb",
+    "mongo",
+    "json",
+    "framework",
+    "backend",
+    "node"
+  ]
+}
