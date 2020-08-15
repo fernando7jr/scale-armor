@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import { Method } from './methods';
 import { Router, Route } from './router';
 
@@ -12,19 +12,19 @@ describe(Router.name, () => {
         endpoints = [
             {
                 method: Method.Get,
-                path: '/'
+                route: '/'
             },
             {
                 method: Method.Post,
-                path: '/test'
+                route: '/test'
             },
             {
                 method: Method.Delete,
-                path: '/'
+                route: '/'
             },
             {
                 method: Method.Post,
-                path: '/test/teasfd'
+                route: '/test/teasfd'
             },
         ];
     });
@@ -37,11 +37,11 @@ describe(Router.name, () => {
         expect(router.size).to.equals(endpoints.length);
 
         endpoints.forEach(e => {
-            const matched = router.match(e.method, e.path);
-            
+            const matched = router.match(e.method, e.route);
+
             expect(matched).to.not.null;
             expect((matched as Route).method).to.equals(e.method);
-            expect((matched as Route).path).to.equals(e.path);
+            expect((matched as Route).route).to.equals(e.route);
         });
     });
 

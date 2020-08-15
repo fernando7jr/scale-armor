@@ -2,14 +2,14 @@ import { Method } from './methods';
 
 export interface Route {
     method: Method;
-    path: string;
+    route: string;
 }
 
 export class Router<T extends Route = Route> {
     private __routes: Map<string, T> = new Map();
 
     add(endpoint: T): void {
-        const key = `${endpoint.method}:${endpoint.path}`;
+        const key = `${endpoint.method}:${endpoint.route}`;
         this.__routes.set(key, endpoint);
     }
 
