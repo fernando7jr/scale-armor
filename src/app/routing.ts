@@ -1,6 +1,7 @@
 import { Method } from './request';
 import { AppWrapper } from './app-wrapper';
 import { EndpointCallback } from './endpoint';
+import { App, AppProvider } from './app';
 
 
 export class Routing extends AppWrapper {
@@ -11,6 +12,12 @@ export class Routing extends AppWrapper {
             callback: req => func(req)
         });
         return this;
+    }
+
+    static for(app: App): Routing;
+    static for(appProvider: AppProvider): Routing;
+    static for(arg: any): Routing {
+        return new Routing(arg);
     }
 
     get(route: string): MethodDecorator;

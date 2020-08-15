@@ -67,6 +67,10 @@ export abstract class App implements EndpointsResolver {
         return this;
     }
 
+    respondsTo(method: Method, route: string): boolean {
+        return this.router.match(method, route) !== undefined;
+    }
+
     get endpoints(): readonly Endpoint[] {
         return Array.from(this.router.routes);
     }
