@@ -46,6 +46,7 @@ describe(HttpAppServer.name, () => {
                 response.on('end', () => {
                     resolve(data);
                 });
+                response.on('error', reject);
             });
 
             if (body) {
@@ -71,7 +72,7 @@ describe(HttpAppServer.name, () => {
             'content-length': body.length.toString(),
             'content-encoding': 'utf-8'
         });
-        return __doHttp(Method.Post, path, body, headers);
+        return httpPost(path, body, headers);
     };
 
     beforeEach(() => {

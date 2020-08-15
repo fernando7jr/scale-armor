@@ -56,10 +56,8 @@ class HttpRequestReader extends RequestReaderBase {
 
 }
 
-
 export class HttpAppServer extends Server {
     private httpServer?: _Server = undefined;
-    private _port: number = 0;
 
     protected getRequestReader(req: IncomingMessage, before?: BeforeHook): RequestReader {
         const method = req.method || '';
@@ -123,7 +121,6 @@ export class HttpAppServer extends Server {
             const response = await this.resolve(requestReader);
             this.sendResponse(res, after(requestReader.head, response));
         });
-        this._port = port;
 
         if (onListening) {
             this.httpServer.once('listening', onListening);
