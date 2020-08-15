@@ -1,4 +1,4 @@
-import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp } from '../app';
+import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider } from '../app';
 import { URL } from 'url';
 import { BeforeHook } from './request-reader';
 import { AddressInfo } from 'net';
@@ -55,9 +55,17 @@ export abstract class Server {
         return this.apps.get(name);
     }
 
-    app(app: App): this {
-        this.apps.set(app.name, app);
+    app(app: App): this;
+    app(appProvider: AppProvider): this;
+    app(arg: App | AppProvider): this {
+        let app: App;
+        if (!(arg instanceof App) && arg.app) {
+            app = arg.app;
+        } else {
+            app = arg as App;
+        }
 
+        this.apps.set(app.name, app);
         return this;
     }
 
@@ -71,7 +79,16 @@ export abstract class Server {
         return this;
     }
 
-    containsApp(app: App): boolean {
+    containsApp(app: App): boolean;
+    containsApp(appProvider: AppProvider): boolean;
+    containsApp(arg: App | AppProvider): boolean {
+        let app: App;
+        if (!(arg instanceof App) && arg.app) {
+            app = arg.app;
+        } else {
+            app = arg as App;
+        }
+
         return this.apps.has(app.name);
     }
 

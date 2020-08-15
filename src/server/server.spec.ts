@@ -97,6 +97,23 @@ describe(Server.name, () => {
         });
     });
 
+    it('should add apps from AppProvider', () => {
+        const appProviders = [
+            { app: createFakeApp('/app') },
+            { app: createFakeApp('/test') },
+            { app: createFakeApp('/test2') },
+            { app: createFakeApp('test3') },
+            { app: createFakeApp('214test2') }
+        ];
+
+        appProviders.forEach(appProvider => {
+            server.app(appProvider);
+        });
+        appProviders.forEach(appProvider => {
+            expect(server.containsApp(appProvider)).to.be.true;
+        });
+    });
+
     it('should resolve incoming requests', async () => {
         const app = createFakeApp('/app');
         const responseBuidler = new JSONResponseBuilder({ test: 'ok' }, StatusCodes.Ok);
