@@ -7,8 +7,8 @@ import { MaybeArray } from '../utils';
 import { JSONResponseBuilder, CommonResponseBuilder } from '../app';
 
 
-export type ControllerParamsCallback<TOut = any> = (params: Params, context: Context) => MaybeArray<TOut>;
-export type ControllerDataCallback<TIn = any, TOut = any> = (data: TIn, params: Params, context: Context) => MaybeArray<TOut>;
+export type ControllerParamsCallback<TOut = any> = (params: Params, context: Context) => Promise<MaybeArray<TOut>>;
+export type ControllerDataCallback<TIn = any, TOut = any> = (data: TIn, params: Params, context: Context) => Promise<MaybeArray<TOut>>;
 export type ControllerCallback<TIn = any, TOut = any> = ControllerParamsCallback<TOut> | ControllerDataCallback<TIn, TOut>;
 
 
