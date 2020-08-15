@@ -1,4 +1,4 @@
-import { App, RequestHead, Response, RequestReader, CommonResponseBuilder, StatusResponseBuilder } from '../app';
+import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp } from '../app';
 import { URL } from 'url';
 import { BeforeHook } from './request-reader';
 import { AddressInfo } from 'net';
@@ -6,6 +6,18 @@ import { StatusCodes } from '../app/status';
 
 
 export type AfterHook = (request: RequestHead, response: Response) => Response;
+
+
+class EmptyApp extends App {
+    constructor() {
+        super('empty');
+    }
+
+    protected async digestRequest(requestReader: RequestReader, endpoint: Endpoint) {
+        return await this.resolveNotFoundEndpoint(requestReader);
+    }
+}
+
 
 export abstract class Server {
     abstract listen(port: number, onListening?: () => void): this;
@@ -16,10 +28,11 @@ export abstract class Server {
     private _before: BeforeHook[] = [];
     private _after: AfterHook[] = [];
     private apps = new Map<string, App>();
+    private emptyApp = new EmptyApp();
 
-    private getAppFromRequest(requestReader: RequestReader) {
+    private getAppFromRequest(requestReader: RequestReader): App {
         const name = requestReader.head.appName;
-        return this.get(name || '/');
+        return this.get(name || '/') || this.emptyApp;
     }
 
     protected getAppNameAndRoute(url: URL) {
@@ -32,9 +45,6 @@ export abstract class Server {
 
     async resolve(requestReader: RequestReader): Promise<Response> {
         const app = this.getAppFromRequest(requestReader);
-        if (!app) {
-            return new StatusResponseBuilder(StatusCodes.NotFound).build();
-        }
 
         // Resolution
         const responseBuilder = await app.resolve(requestReader);
