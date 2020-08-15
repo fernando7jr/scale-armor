@@ -1,12 +1,13 @@
 import { expect } from 'chai';
-import { App } from './app';
+import { SimpleApp } from './simple-app';
 import { Method } from '../router';
-import { JSONResponseBuilder, RequestHead, RequestBody, RequestReader } from './request';
+import { RequestHead, RequestBody, RequestReader } from './request';
 import { StatusCodes } from './status';
+import { JSONResponseBuilder } from './response-builder';
 
 
-describe(App.name, () => {
-    let app: App;
+describe(SimpleApp.name, () => {
+    let app: SimpleApp;
 
     const createFakeRequestReader = (head: Partial<RequestHead>, body?: Partial<RequestBody>) => {
         const fakeRequestreader: Partial<RequestReader> = {
@@ -19,10 +20,10 @@ describe(App.name, () => {
         };
 
         return fakeRequestreader as RequestReader;
-    }
+    };
 
     beforeEach(() => {
-        app = new App('test');
+        app = new SimpleApp('test');
     });
 
     it('should have an name', () => {
@@ -30,21 +31,21 @@ describe(App.name, () => {
     });
 
     it('should store an endpoint', () => {
-        app.add({
+        app.endpoint({
             method: Method.Get,
-            path: '/',
+            route: '/',
             callback: async () => null as any
         });
-        app.add(Method.Get, '/test', async () => null as any);
+        app.endpoint(Method.Get, '/test', async () => null as any);
 
         expect(app.endpoints.length).to.equals(2);
     });
 
     it('should resolve an endpoint', async () => {
         const body = { test: 'Hello World!' };
-        app.add({
+        app.endpoint({
             method: Method.Get,
-            path: '/',
+            route: '/',
             callback: async () => {
                 return new JSONResponseBuilder(body, StatusCodes.Ok);
             }
@@ -60,13 +61,13 @@ describe(App.name, () => {
     });
 
     it('should resolve the correct endpoint', async () => {
-        app.add({
+        app.endpoint({
             method: Method.Get,
-            path: '/',
+            route: '/',
             callback: async () => {
                 return new JSONResponseBuilder({ message: 'Get test' }, StatusCodes.Ok);
             }
-        }).add(Method.Post, '/', async () => {
+        }).endpoint(Method.Post, '/', async () => {
             return new JSONResponseBuilder({ message: 'Post Test' }, StatusCodes.Created);
         });
 
@@ -90,10 +91,8 @@ describe(App.name, () => {
 
     it('should set a custom notFound endpoint', async () => {
         const body = { test: 'Hello World!' };
-        app.setNotFoundEndpoint({
-            callback: async () => {
-                return new JSONResponseBuilder(body, StatusCodes.NotFound);
-            }
+        app.setNotFoundCallback(async () => {
+            return new JSONResponseBuilder(body, StatusCodes.NotFound);
         });
 
         const requestReader = createFakeRequestReader({ path: '/app/', route: '/', method: Method.Get });
@@ -106,7 +105,7 @@ describe(App.name, () => {
     });
 
     it('should resolve to InternalServerError', async () => {
-        app.add(Method.Get, '/', async () => {
+        app.endpoint(Method.Get, '/', async () => {
             throw new Error('Catch me!');
         });
 
@@ -118,10 +117,10 @@ describe(App.name, () => {
     });
 
     it('should resolve to custom InternalServerError callback', async () => {
-        app.setInternalServerErrorCallback(async () => {
-            return new JSONResponseBuilder({test: 'error'}, StatusCodes.InternalServerError);
+        app.setRequesthandlingErrorCallback(async () => {
+            return new JSONResponseBuilder({ test: 'error' }, StatusCodes.InternalServerError);
         });
-        app.add(Method.Get, '/', async () => {
+        app.endpoint(Method.Get, '/', async () => {
             throw new Error('Catch me!');
         });
 

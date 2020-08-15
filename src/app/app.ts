@@ -1,97 +1,69 @@
 import { Router, Method } from '../router';
-import { EndpointCallback, Endpoint, Request, RequestReader, JSONResponseBuilder, ResponseBuilder } from './request';
+import { RequestReader, ResponseBuilder } from './request';
+import { EndpointCallback, Endpoint, EndpointsResolver } from './endpoint';
+import { TraceableError, RequestHandlingError } from './error';
 import { StatusCodes } from './status';
+import { StatusResponseBuilder } from './response-builder';
 
-export type InternalServerErrorCallback = (error: Error) => Promise<ResponseBuilder>;
 
-const notFoundEndpointCallback: EndpointCallback = () => {
-    const status = StatusCodes.NotFound;
-    const response = new JSONResponseBuilder({ status: status.code, message: status.name }, status);
-    return Promise.resolve(response);
-};
-
-const internalServerErrorCallback = (error: Error) => {
-    const status = StatusCodes.InternalServerError;
-    const response = new JSONResponseBuilder({ status: status.code, message: status.name, error }, status);
-    return Promise.resolve(response);
-};
-
-export class App {
+export abstract class App implements EndpointsResolver {
     private _name: string;
     private router = new Router<Endpoint>();
-    private notFoundEndpointCallback: EndpointCallback = notFoundEndpointCallback;
-    private internalServerErrorCallback: InternalServerErrorCallback = internalServerErrorCallback;
 
     constructor(name: string) {
         this._name = name;
     }
 
-    protected getEndpoint(requestReader: RequestReader): Endpoint | undefined {
-        const { method, route, path } = requestReader.head;
-        const notFoundEndpoint = {
-            callback: this.notFoundEndpointCallback,
-            method,
-            path,
-        };
-
-        if (!route) {
-            return notFoundEndpoint;
-        }
-
-        const endpoint = this.router.match(method, route);
-        if (!endpoint) {
-            return notFoundEndpoint;
-        }
-        return endpoint;
+    protected async resolveNotFoundEndpoint(requestReader: RequestReader): Promise<ResponseBuilder> {
+        return new StatusResponseBuilder(StatusCodes.NotFound, `Could not resolve ${requestReader.head.path}`);
     }
 
-    async resolve(requestReader: RequestReader) {
-        const endpoint = this.getEndpoint(requestReader);
-        if (!endpoint || !endpoint.callback) {
-            const { method, path } = requestReader.head;
-            throw new Error(`Endpoint not found for "${method}:${path}"`);
+    protected async resolveRequestHandlingErrorEndpoint(requestReader: RequestReader, error: TraceableError): Promise<ResponseBuilder> {
+        const status = error instanceof RequestHandlingError ? error.status : StatusCodes.InternalServerError;
+        const message = status.code >= 500 ? error.toString() : error.message;
+
+        return new StatusResponseBuilder(status, message);
+    }
+
+    protected getEndpoint(requestReader: RequestReader): Endpoint | undefined {
+        const { method, route } = requestReader.head;
+        if (!route) {
+            return undefined;
         }
+        return this.router.match(method, route);
+    }
+
+    protected abstract async digestRequest(requestReader: RequestReader, endpoint: Endpoint): Promise<ResponseBuilder>;
+
+    async resolve(requestReader: RequestReader): Promise<ResponseBuilder> {
+        const endpoint = this.getEndpoint(requestReader);
 
         try {
-            return await endpoint.callback(requestReader);
+            if (!endpoint) {
+                return await this.resolveNotFoundEndpoint(requestReader);
+            }
+            return await this.digestRequest(requestReader, endpoint);
         } catch (error) {
-            return await this.internalServerErrorCallback(error);
+            if (!(error instanceof TraceableError)) {
+                error = new TraceableError('Error during request digestion.', error);
+            }
+            return await this.resolveRequestHandlingErrorEndpoint(requestReader, error);
         }
     }
 
-    add(method: Method, path: string, callback: EndpointCallback): this;
-    add(endpoint: Endpoint): this;
-    add(arg1: Method | Endpoint, path?: string, callback?: EndpointCallback): this {
-        if (path && callback) {
-            return this.add({
+    endpoint(method: Method, route: string, callback: EndpointCallback): this;
+    endpoint(endpoint: Endpoint): this;
+    endpoint(arg1: Method | Endpoint, route?: string, callback?: EndpointCallback): this {
+        if (route && callback) {
+            return this.endpoint({
                 method: arg1 as Method,
-                path,
+                route,
                 callback
             });
         }
 
         const endpoint = arg1 as Endpoint;
         this.router.add(endpoint);
-        return this;
-    }
-
-    setNotFoundEndpoint(endpoint?: Pick<Endpoint, 'callback'>): this {
-        if (!endpoint) {
-            this.notFoundEndpointCallback = notFoundEndpointCallback;
-        } else {
-            this.notFoundEndpointCallback = endpoint.callback;
-        }
-
-        return this;
-    }
-
-    setInternalServerErrorCallback(callback?: InternalServerErrorCallback): this {
-        if (!callback) {
-            this.internalServerErrorCallback = internalServerErrorCallback;
-        } else {
-            this.internalServerErrorCallback = callback;
-        }
-
         return this;
     }
 
@@ -102,4 +74,8 @@ export class App {
     get name(): string {
         return this._name;
     }
+}
+
+export interface AppProvider {
+    readonly app: App;
 }
