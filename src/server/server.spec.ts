@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-import httpClient from 'http';
-import { App, RequestReader, JSONResponseBuilder, RequestHead, RequestBody, Method, ResponseBuilder, Headers } from '../app';
+import { RequestReader, JSONResponseBuilder, RequestHead, RequestBody, Method, ResponseBuilder, Headers, SimpleApp } from '../app';
 import { StatusCodes } from '../app/status';
 import { Server } from './server';
 
@@ -47,7 +46,7 @@ describe(Server.name, () => {
     let server: Server;
 
     const createFakeApp = (name: string) => {
-        return new class extends App { }(name);
+        return new class extends SimpleApp { }(name);
     };
     const createFakeRequestReader = (head: Partial<RequestHead>, body?: Partial<RequestBody>) => {
         const path = head.path || ((head.appName || '') + (head.route || ''));
@@ -101,7 +100,7 @@ describe(Server.name, () => {
     it('should resolve incoming requests', async () => {
         const app = createFakeApp('/app');
         const responseBuidler = new JSONResponseBuilder({ test: 'ok' }, StatusCodes.Ok);
-        app.add(Method.Get, '/status', async () => {
+        app.endpoint(Method.Get, '/status', async () => {
             return responseBuidler;
         });
 
@@ -135,7 +134,7 @@ describe(Server.name, () => {
     it('should listen and resolve an incoming get request', async () => {
         const app = createFakeApp('/app');
         const responseBuidler = new JSONResponseBuilder({ test: 'ok' }, StatusCodes.Ok);
-        app.add(Method.Get, '/status', async () => {
+        app.endpoint(Method.Get, '/status', async () => {
             return responseBuidler;
         });
 
@@ -149,7 +148,7 @@ describe(Server.name, () => {
     it('should listen and resolve an incoming post request', async () => {
         const app = createFakeApp('/app');
         let responseBuidler: ResponseBuilder = null as any;
-        app.add(Method.Post, '/statusTest', async requestReader => {
+        app.endpoint(Method.Post, '/statusTest', async requestReader => {
             const body = await requestReader.read();
             responseBuidler = new JSONResponseBuilder({ test: 'ok', message: body.json }, StatusCodes.Ok);
             return responseBuidler;
@@ -175,7 +174,7 @@ describe(Server.name, () => {
     it('should listen and resolve the right endpoint', async () => {
         const app = createFakeApp('/app');
         let responseBuidler: ResponseBuilder = null as any;
-        app.add(Method.Post, '/statusTest', async requestReader => {
+        app.endpoint(Method.Post, '/statusTest', async requestReader => {
             const body = await requestReader.read();
             responseBuidler = new JSONResponseBuilder({ test: 'ok', message: body.json }, StatusCodes.Ok);
             return responseBuidler;
