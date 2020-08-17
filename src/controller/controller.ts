@@ -6,9 +6,8 @@ import { Context } from './context';
 import { MaybeArray } from '../utils';
 import { JSONResponseBuilder, CommonResponseBuilder } from '../app';
 
-
 export type ControllerParamsCallback<TOut = any> = (params: Params, context: Context) => Promise<MaybeArray<TOut>>;
-export type ControllerDataCallback<TIn = any, TOut = any> = (data: TIn, params: Params, context: Context) => Promise<MaybeArray<TOut>>;
+export type ControllerDataCallback<TIn = any, TOut = any> = (params: Params, context: Context, data: TIn) => Promise<MaybeArray<TOut>>;
 export type ControllerCallback<TIn = any, TOut = any> = ControllerParamsCallback<TOut> | ControllerDataCallback<TIn, TOut>;
 
 
@@ -23,12 +22,12 @@ export class Controller extends AppWrapper<ControllerCallback> {
 
     protected async resolveControllerCallback(method: Method, request: Request, func: ControllerCallback) {
         const context = this.getContext(request);
-        const params = request.params;
+        const params = request.params || {};
         if (method === Method.Get || method === Method.Delete) {
             return (func as ControllerParamsCallback)(params, context);
         }
-        const data = request.json | request.form;
-        return (func as ControllerDataCallback)(data, params, context);
+        const data = request.json || request.form || request.body;
+        return (func as ControllerDataCallback)(params, context, data);
     }
 
     protected wrapEndpoint(method: Method, route: string, func: ControllerCallback): this {
@@ -54,36 +53,36 @@ export class Controller extends AppWrapper<ControllerCallback> {
     }
 
     get(route: string): MethodDecorator;
-    get(route: string, func: EndpointCallback): this;
-    get(route: string, func?: EndpointCallback): MethodDecorator | this {
+    get<TOut>(route: string, func: ControllerParamsCallback<TOut>): this;
+    get<TOut>(route: string, func?: ControllerParamsCallback<TOut>): MethodDecorator | this {
         const method = Method.Get;
         return this.wrap(method, route, func);
     }
 
     post(route: string): MethodDecorator;
-    post(route: string, func: EndpointCallback): this;
-    post(route: string, func?: EndpointCallback): MethodDecorator | this {
+    post<TIn, TOut>(route: string, func: ControllerDataCallback<TIn, TOut>): this;
+    post<TIn, TOut>(route: string, func?: ControllerDataCallback<TIn, TOut>): MethodDecorator | this {
         const method = Method.Post;
         return this.wrap(method, route, func);
     }
 
     put(route: string): MethodDecorator;
-    put(route: string, func: EndpointCallback): this;
-    put(route: string, func?: EndpointCallback): MethodDecorator | this {
+    put<TIn, TOut>(route: string, func: ControllerDataCallback<TIn, TOut>): this;
+    put<TIn, TOut>(route: string, func?: ControllerDataCallback<TIn, TOut>): MethodDecorator | this {
         const method = Method.Put;
         return this.wrap(method, route, func);
     }
 
     patch(route: string): MethodDecorator;
-    patch(route: string, func: EndpointCallback): this;
-    patch(route: string, func?: EndpointCallback): MethodDecorator | this {
+    patch<TIn, TOut>(route: string, func: ControllerDataCallback<TIn, TOut>): this;
+    patch<TIn, TOut>(route: string, func?: ControllerDataCallback<TIn, TOut>): MethodDecorator | this {
         const method = Method.Patch;
         return this.wrap(method, route, func);
     }
 
     delete(route: string): MethodDecorator;
-    delete(route: string, func: EndpointCallback): this;
-    delete(route: string, func?: EndpointCallback): MethodDecorator | this {
+    delete<TOut>(route: string, func: ControllerParamsCallback<TOut>): this;
+    delete<TOut>(route: string, func?: ControllerParamsCallback<TOut>): MethodDecorator | this {
         const method = Method.Delete;
         return this.wrap(method, route, func);
     }
