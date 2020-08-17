@@ -6,28 +6,42 @@ import { Context } from './context';
 import { MaybeArray } from '../utils';
 import { JSONResponseBuilder, CommonResponseBuilder } from '../app';
 
-export type ControllerParamsCallback<TOut = any> = (params: Params, context: Context) => Promise<MaybeArray<TOut>>;
-export type ControllerDataCallback<TIn = any, TOut = any> = (params: Params, context: Context, data: TIn) => Promise<MaybeArray<TOut>>;
+export type ControllerParamsCallback<TOut = any> = (context: Context) => Promise<MaybeArray<TOut>>;
+export type ControllerDataCallback<TIn = any, TOut = any> = (context: Context, data: TIn) => Promise<MaybeArray<TOut>>;
 export type ControllerCallback<TIn = any, TOut = any> = ControllerParamsCallback<TOut> | ControllerDataCallback<TIn, TOut>;
 
 
 export class Controller extends AppWrapper<ControllerCallback> {
+    private static reservedQueryParams = ['$page', '$pageSize'] as const;
+
     protected getContext(request: Request, partialContext?: Context): Context {
+        const params = request.params || {};
+        const query: Params = {};
+        const reserved: Params = {};
+
+        Object.keys(params).forEach(key => {
+            if (Controller.reservedQueryParams.includes(key as any)) {
+                reserved[key] = params[key];
+            } else {
+                query[key] = params[key];
+            }
+        });
+
         return Object.assign({
             request,
-            page: request.params?.$page,
-            pageSize: request.params?.$pageSize,
+            query,
+            page: reserved.$page,
+            pageSize: reserved.$pageSize,
         }, partialContext || {});
     }
 
     protected async resolveControllerCallback(method: Method, request: Request, func: ControllerCallback) {
         const context = this.getContext(request);
-        const params = request.params || {};
         if (method === Method.Get || method === Method.Delete) {
-            return (func as ControllerParamsCallback)(params, context);
+            return (func as ControllerParamsCallback)(context);
         }
         const data = request.json || request.form || request.body;
-        return (func as ControllerDataCallback)(params, context, data);
+        return (func as ControllerDataCallback)(context, data);
     }
 
     protected wrapEndpoint(method: Method, route: string, func: ControllerCallback): this {

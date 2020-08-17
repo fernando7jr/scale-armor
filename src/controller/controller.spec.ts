@@ -75,15 +75,19 @@ describe(App.name, () => {
     });
 
     it('should pass the right params when resolving', async () => {
-        const paramsController: ControllerParamsCallback = async (params: Params, context: Context) => {
-            expect(params).to.not.be.undefined;
-            expect(context.request).to.not.be.undefined;
-            return { method: context.request.method, params };
+        const paramsController: ControllerParamsCallback = async (context: Context) => {
+            const query = context.query;
+            expect(query).to.not.be.undefined;
+            const request = context.request;
+            expect(request).to.not.be.undefined;
+            return { method: request.method, query };
         };
-        const dataController: ControllerDataCallback = async (params: Params, context: Context, data: any) => {
-            expect(params).to.not.be.undefined;
-            expect(context.request).to.not.be.undefined;
-            return { data, method: context.request.method, params };
+        const dataController: ControllerDataCallback = async (context: Context, data: any) => {
+            const query = context.query;
+            expect(query).to.not.be.undefined;
+            const request = context.request;
+            expect(request).to.not.be.undefined;
+            return { data, method: request.method, query };
         };
 
         controller.get('/', paramsController)
@@ -96,48 +100,48 @@ describe(App.name, () => {
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Get });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ method: Method.Get, params: {} }));
+        expect(response.body).to.equals(JSON.stringify({ method: Method.Get, query: {} }));
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Get, params: { id: 2, age: 3 } });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ method: Method.Get, params: { id: 2, age: 3 } }));
+        expect(response.body).to.equals(JSON.stringify({ method: Method.Get, query: { id: 2, age: 3 } }));
 
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Delete });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ method: Method.Delete, params: {} }));
+        expect(response.body).to.equals(JSON.stringify({ method: Method.Delete, query: {} }));
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Delete, params: { id: 2, age: 3 } });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ method: Method.Delete, params: { id: 2, age: 3 } }));
+        expect(response.body).to.equals(JSON.stringify({ method: Method.Delete, query: { id: 2, age: 3 } }));
 
         const body = { test: 'Hello World!' };
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Post }, { json: body });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Post, params: {} }));
+        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Post, query: {} }));
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Post, params: { id: 2, age: 3 } }, { json: body });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Post, params: { id: 2, age: 3 } }));
+        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Post, query: { id: 2, age: 3 } }));
 
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Patch }, { json: body });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Patch, params: {} }));
+        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Patch, query: {} }));
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Patch, params: { id: 2, age: 3 } }, { json: body });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Patch, params: { id: 2, age: 3 } }));
+        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Patch, query: { id: 2, age: 3 } }));
 
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Put }, { json: body });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Put, params: {} }));
+        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Put, query: {} }));
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Put, params: { id: 2, age: 3 } }, { json: body });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
-        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Put, params: { id: 2, age: 3 } }));
+        expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Put, query: { id: 2, age: 3 } }));
     });
 
     it('should inject endpoints through decorator', () => {
@@ -167,7 +171,7 @@ describe(App.name, () => {
     });
 
     it('should work with either json, form and binary', async () => {
-        const dataController: ControllerDataCallback = async (params: Params, context: Context, data: any) => {
+        const dataController: ControllerDataCallback = async (context: Context, data: any) => {
             return { data };
         };
 
@@ -259,5 +263,19 @@ describe(App.name, () => {
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
         expect(response.body).to.equals(JSON.stringify({ data: buffer }));
+    });
+
+    it('should parse reserved query params correctly', async () => {
+        controller.get('/', async (context: Context) => {
+            const query = context.query;
+            return { query, page: context.page, pageSize: context.pageSize };
+        });
+
+        let response: Response;
+        response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Get, params: { $page: 1, $pageSize: 30, test: 'ok' } });
+        expect(response.status).to.deep.equals(StatusCodes.Ok);
+        expect(response.contentType).to.contains('application/json');
+        expect(response.body).to.equals(JSON.stringify({ query: { test: 'ok' }, page: 1, pageSize: 30 }));
+
     });
 });
