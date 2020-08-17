@@ -33,7 +33,8 @@
   },
   "dependencies": {
     "mongodb": "^3.5.7",
-    "qs": "^6.9.4"
+    "qs": "^6.9.4",
+    "reflect-metadata": "^0.1.13"
   },
   "keywords": [
     "api",
