@@ -7,8 +7,8 @@ import { MaybeArray } from '../utils';
 import { JSONResponseBuilder, CommonResponseBuilder } from '../app';
 
 export type ControllerParamsCallback<TOut = any> = (context: Context) => Promise<MaybeArray<TOut>>;
-export type ControllerDataCallback<TIn = any, TOut = any> = (context: Context, data: TIn) => Promise<MaybeArray<TOut>>;
-export type ControllerCallback<TIn = any, TOut = any> = ControllerParamsCallback<TOut> | ControllerDataCallback<TIn, TOut>;
+export type ControllerDataCallback<TOut = any, TData = any> = (context: Context, data: TData) => Promise<MaybeArray<TOut>>;
+export type ControllerCallback<TOut = any, TData = any> = ControllerParamsCallback<TOut> | ControllerDataCallback<TOut, TData>;
 
 
 export class Controller extends AppWrapper<ControllerCallback> {
@@ -74,22 +74,22 @@ export class Controller extends AppWrapper<ControllerCallback> {
     }
 
     post(route: string): MethodDecorator;
-    post<TIn, TOut>(route: string, func: ControllerDataCallback<TIn, TOut>): this;
-    post<TIn, TOut>(route: string, func?: ControllerDataCallback<TIn, TOut>): MethodDecorator | this {
+    post<TOut, TData>(route: string, func: ControllerDataCallback<TOut, TData>): this;
+    post<TOut, TData>(route: string, func?: ControllerDataCallback<TOut, TData>): MethodDecorator | this {
         const method = Method.Post;
         return this.wrap(method, route, func);
     }
 
     put(route: string): MethodDecorator;
-    put<TIn, TOut>(route: string, func: ControllerDataCallback<TIn, TOut>): this;
-    put<TIn, TOut>(route: string, func?: ControllerDataCallback<TIn, TOut>): MethodDecorator | this {
+    put<TOut, TData>(route: string, func: ControllerDataCallback<TOut, TData>): this;
+    put<TOut, TData>(route: string, func?: ControllerDataCallback<TOut, TData>): MethodDecorator | this {
         const method = Method.Put;
         return this.wrap(method, route, func);
     }
 
     patch(route: string): MethodDecorator;
-    patch<TIn, TOut>(route: string, func: ControllerDataCallback<TIn, TOut>): this;
-    patch<TIn, TOut>(route: string, func?: ControllerDataCallback<TIn, TOut>): MethodDecorator | this {
+    patch<TOut, TData>(route: string, func: ControllerDataCallback<TOut, TData>): this;
+    patch<TOut, TData>(route: string, func?: ControllerDataCallback<TOut, TData>): MethodDecorator | this {
         const method = Method.Patch;
         return this.wrap(method, route, func);
     }
