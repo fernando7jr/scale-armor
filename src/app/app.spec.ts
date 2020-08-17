@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Method } from '../router';
-import { RequestHead, RequestBody, RequestReader, ResponseBuilder } from './request';
+import { RequestHead, RequestBody, RequestReader } from './request';
 import { StatusCodes } from './status';
 import { JSONResponseBuilder } from './response-builder';
 import { App } from './app';
@@ -74,17 +74,21 @@ describe(App.name, () => {
     });
 
     it('should resolve the correct endpoint', async () => {
+        const body = { test: 'ok' };
+
         app.endpoint({
             method: Method.Get,
             route: '/',
             callback: async () => {
                 return new JSONResponseBuilder({ message: 'Get test' }, StatusCodes.Ok);
             }
-        }).endpoint(Method.Post, '/', async () => {
+        }).endpoint(Method.Post, '/', async requestReader => {
+            const request = await requestReader.read();
+            expect(request.json).to.be.deep.equal(body);
             return new JSONResponseBuilder({ message: 'Post Test' }, StatusCodes.Created);
         });
 
-        const requestReader = createFakeRequestReader({ path: '/app/', route: '/', method: Method.Post });
+        const requestReader = createFakeRequestReader({ path: '/app/', route: '/', method: Method.Post }, { json: body });
         const builder = await app.resolve(requestReader);
         const response = builder.build();
 
