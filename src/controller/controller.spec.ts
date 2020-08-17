@@ -277,5 +277,9 @@ describe(App.name, () => {
         expect(response.contentType).to.contains('application/json');
         expect(response.body).to.equals(JSON.stringify({ query: { test: 'ok' }, page: 1, pageSize: 30 }));
 
+        response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Get, params: { $page: 1, test: 'ok' } });
+        expect(response.status).to.deep.equals(StatusCodes.Ok);
+        expect(response.contentType).to.contains('application/json');
+        expect(response.body).to.equals(JSON.stringify({ query: { test: 'ok' }, page: 1, pageSize: undefined }));
     });
 });
