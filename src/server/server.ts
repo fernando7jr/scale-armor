@@ -1,4 +1,4 @@
-import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider } from '../app';
+import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider, ClassConstructor } from '../app';
 import { URL } from 'url';
 import { BeforeHook } from './request-reader';
 import { AddressInfo } from 'net';
@@ -57,12 +57,16 @@ export abstract class Server {
 
     app(app: App): this;
     app(appProvider: AppProvider): this;
-    app(arg: App | AppProvider): this {
+    app(classConstructor: ClassConstructor): this;
+    app(arg: App | AppProvider | ClassConstructor): this {
         let app: App;
-        if (!(arg instanceof App) && arg.app) {
+        if (!(arg instanceof App) && 'app' in arg) {
             app = arg.app;
-        } else {
+        } else if (arg instanceof App) {
             app = arg as App;
+        } else {
+            const appProvider = Reflect.getMetadata('appProvider', arg);
+            app = appProvider.app;
         }
 
         this.apps.set(app.name, app);
