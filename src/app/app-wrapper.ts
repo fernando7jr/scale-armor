@@ -3,16 +3,12 @@ import { AppProvider, App } from "./app";
 import { Endpoint } from "./endpoint";
 
 export abstract class AppWrapper<T = Function> {
-    private appProvider: AppProvider;
+    private appProvider: AppProvider | App;
 
     constructor(app: App);
     constructor(app: AppProvider);
     constructor(arg: App | AppProvider) {
-        if (arg instanceof App) {
-            this.appProvider = { app: arg };
-        } else {
-            this.appProvider = arg;
-        }
+        this.appProvider = arg;
     }
 
     protected decorate(route: string, method: Method): MethodDecorator {
@@ -29,7 +25,7 @@ export abstract class AppWrapper<T = Function> {
     }
 
     protected injectEndpoint(endpoint: Endpoint): void {
-        this.appProvider.app.endpoint(endpoint);
+        this.appProvider.endpoint(endpoint);
     }
 
     protected abstract wrapEndpoint(method: Method, route: string, prop: T): this;

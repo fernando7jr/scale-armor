@@ -49,18 +49,12 @@ export class SimpleApp extends App {
     }
 }
 
-export class SimpleAppProvider implements AppProvider {
-    private _app: SimpleApp;
-
-    constructor(name: string) {
-        this._app = new SimpleApp(name);
-    }
-
-    get app() {
-        return this._app;
-    }
-
-    get name() {
-        return this._app.name;
+export class SimpleAppProvider extends AppProvider {
+    build(name: string): App {
+        const app = new SimpleApp(name);
+        for (const endpoint of this.endpoints) {
+            app.endpoint(endpoint);
+        }
+        return app;
     }
 }

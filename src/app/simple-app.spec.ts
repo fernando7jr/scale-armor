@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { SimpleApp } from './simple-app';
+import { SimpleApp, SimpleAppProvider } from './simple-app';
 import { Method } from '../router';
 import { RequestHead, RequestBody, RequestReader } from './request';
 import { StatusCodes } from './status';
@@ -130,5 +130,19 @@ describe(SimpleApp.name, () => {
 
         expect(response.status).to.equals(StatusCodes.InternalServerError);
         expect(response.body).to.equals('{"test":"error"}');
+    });
+});
+
+describe(SimpleAppProvider.name, () => {
+    it('should build a SimpleApp', () => {
+        const simpleAppProvider = new SimpleAppProvider();
+        const app = simpleAppProvider.build('/test');
+        expect(app).to.be.instanceOf(SimpleApp);
+    });
+
+    it('should build an app with the given name', () => {
+        const simpleAppProvider = new SimpleAppProvider();
+        const app = simpleAppProvider.build('/test');
+        expect(app.name).to.be.equal('/test');
     });
 });

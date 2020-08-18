@@ -3,13 +3,13 @@ import { Method } from '../router';
 import { RequestHead, RequestBody, RequestReader } from './request';
 import { StatusCodes } from './status';
 import { JSONResponseBuilder } from './response-builder';
-import { App } from './app';
+import { App, AppProvider } from './app';
 import { Endpoint } from './endpoint';
 
 
 class TestApp extends App {
-    constructor() {
-        super('/test');
+    constructor(name?: string) {
+        super(name || '/test');
     }
 
     protected digestRequest(requestReader: RequestReader, endpoint: Endpoint) {
@@ -51,6 +51,7 @@ describe(App.name, () => {
         app.endpoint(Method.Get, '/test', async () => null as any);
 
         expect(app.endpoints.length).to.equals(2);
+        expect(app.respondsTo(Method.Get, '/')).to.be.true;
         expect(app.respondsTo(Method.Get, '/test')).to.be.true;
     });
 
@@ -116,5 +117,36 @@ describe(App.name, () => {
         const response = builder.build();
 
         expect(response.status).to.equals(StatusCodes.InternalServerError);
+    });
+});
+
+describe(AppProvider.name, () => {
+    let appProvider: AppProvider;
+
+    beforeEach(() => {
+        appProvider = new class extends AppProvider {
+            build(name: string): App {
+                return new TestApp(name);
+            }
+        }();
+    });
+
+    it('should build an app with the same given name', () => {
+        const name = '/app-provided-for-test';
+        const app = appProvider.build(name);
+        expect(app.name).to.be.equal(name);
+    });
+
+    it('should store an endpoint', () => {
+        appProvider.endpoint({
+            method: Method.Get,
+            route: '/',
+            callback: async () => null as any
+        });
+        appProvider.endpoint(Method.Get, '/test', async () => null as any);
+
+        expect(appProvider.endpoints.length).to.equals(2);
+        expect(appProvider.respondsTo(Method.Get, '/')).to.be.true;
+        expect(appProvider.respondsTo(Method.Get, '/test')).to.be.true;
     });
 });
