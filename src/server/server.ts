@@ -1,4 +1,4 @@
-import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider, ClassConstructor } from '../app';
+import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider, ClassConstructor, ProvidedFor } from '../app';
 import { URL } from 'url';
 import { BeforeHook } from './request-reader';
 import { AddressInfo } from 'net';
@@ -56,17 +56,22 @@ export abstract class Server {
     }
 
     app(app: App): this;
-    app(appProvider: AppProvider): this;
+    app(appProvider: AppProvider, name: string): this;
     app(classConstructor: ClassConstructor): this;
-    app(arg: App | AppProvider | ClassConstructor): this {
+    app(arg: App | AppProvider | ClassConstructor, name?: string): this {
         let app: App;
-        if (!(arg instanceof App) && 'app' in arg) {
-            app = arg.app;
+        if (arg instanceof AppProvider) {
+            if (!name) {
+                throw new Error('An app-provider needs a name for building the real app');
+            }
+            app = arg.build(name);
         } else if (arg instanceof App) {
             app = arg as App;
+        } else if (arg) {
+            const metadata = ProvidedFor.getAppMetadata(arg);
+            return this.app(metadata.appProvider, metadata.name as string);
         } else {
-            const appProvider = Reflect.getMetadata('appProvider', arg);
-            app = appProvider.app;
+            throw new Error('Could not find an app in the provided parameters');
         }
 
         this.apps.set(app.name, app);
@@ -84,16 +89,16 @@ export abstract class Server {
     }
 
     containsApp(app: App): boolean;
-    containsApp(appProvider: AppProvider): boolean;
-    containsApp(arg: App | AppProvider): boolean {
-        let app: App;
-        if (!(arg instanceof App) && arg.app) {
-            app = arg.app;
+    containsApp(name: string): boolean;
+    containsApp(arg: App | string): boolean {
+        let name: string;;
+        if (arg instanceof App) {
+            name = arg.name;
         } else {
-            app = arg as App;
+            name = arg + '';
         }
 
-        return this.apps.has(app.name);
+        return this.apps.has(name);
     }
 
     getBeforeMiddleware(): BeforeHook {

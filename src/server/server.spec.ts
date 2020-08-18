@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { RequestReader, JSONResponseBuilder, RequestHead, RequestBody, Method, ResponseBuilder, Headers, SimpleApp } from '../app';
+import { RequestReader, JSONResponseBuilder, RequestHead, RequestBody, Method, ResponseBuilder, Headers, SimpleApp, SimpleAppProvider } from '../app';
 import { StatusCodes } from '../app/status';
 import { Server } from './server';
 
@@ -47,6 +47,9 @@ describe(Server.name, () => {
 
     const createFakeApp = (name: string) => {
         return new class extends SimpleApp { }(name);
+    };
+    const createFakeAppProvider = () => {
+        return new class extends SimpleAppProvider { }();
     };
     const createFakeRequestReader = (head: Partial<RequestHead>, body?: Partial<RequestBody>) => {
         const path = head.path || ((head.appName || '') + (head.route || ''));
@@ -98,19 +101,19 @@ describe(Server.name, () => {
     });
 
     it('should add apps from AppProvider', () => {
-        const appProviders = [
-            { app: createFakeApp('/app') },
-            { app: createFakeApp('/test') },
-            { app: createFakeApp('/test2') },
-            { app: createFakeApp('test3') },
-            { app: createFakeApp('214test2') }
+        const tests = [
+            { appProvider: createFakeAppProvider(), name: '/app' },
+            { appProvider: createFakeAppProvider(), name: '/test' },
+            { appProvider: createFakeAppProvider(), name: '/test2' },
+            { appProvider: createFakeAppProvider(), name: 'test3' },
+            { appProvider: createFakeAppProvider(), name: '214test2' }
         ];
 
-        appProviders.forEach(appProvider => {
-            server.app(appProvider);
+        tests.forEach(test => {
+            server.app(test.appProvider, test.name);
         });
-        appProviders.forEach(appProvider => {
-            expect(server.containsApp(appProvider)).to.be.true;
+        tests.forEach(test => {
+            expect(server.containsApp(test.name)).to.be.true;
         });
     });
 

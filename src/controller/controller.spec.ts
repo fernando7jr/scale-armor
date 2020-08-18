@@ -4,11 +4,11 @@ import {
     RequestHead,
     RequestBody,
     RequestReader,
-    Params,
     StatusCodes,
     App,
     Endpoint,
-    Response
+    Response,
+    ProvidedFor
 } from '../app/';
 import { Context } from './context';
 import { Controller, ControllerDataCallback, ControllerParamsCallback } from './controller';
@@ -25,7 +25,7 @@ class TestApp extends App {
 }
 
 
-describe(App.name, () => {
+describe(Controller.name, () => {
     let app: TestApp;
     let controller: Controller;
 
@@ -236,7 +236,7 @@ describe(App.name, () => {
         expect(response.contentType).to.contains('application/json');
         expect(response.body).to.equals(JSON.stringify({ data: body }));
 
-        const buffer = new Buffer(body.test);
+        const buffer = Buffer.from(body.test);
         response = await resolveEndpoint({ path: '/app/', route: '/', method: Method.Post }, { body: buffer });
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
@@ -281,5 +281,23 @@ describe(App.name, () => {
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
         expect(response.body).to.equals(JSON.stringify({ query: { test: 'ok' }, page: 1, pageSize: undefined }));
+    });
+
+    it('should inject endpoints on a provided-app', () => {
+        @ProvidedFor('/test-app')
+        class TestControllerClass {
+            @Controller.Get('/test-endpoint')
+            public async testEndpoint(context: Context) {
+                return 'ok';
+            }
+        }
+
+        const metadata = ProvidedFor.getAppMetadata(TestControllerClass);
+        expect(metadata).to.not.be.undefined;
+        expect(metadata?.name).to.not.be.undefined;
+        expect(metadata?.appProvider).to.not.be.undefined;
+        expect(metadata?.appProvider.respondsTo(Method.Get, '/test-endpoint')).to.be.true;
+        const app = metadata?.appProvider.build(metadata?.name as string);
+        expect(app.respondsTo(Method.Get, '/test-endpoint')).to.be.true;
     });
 });

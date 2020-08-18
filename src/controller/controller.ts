@@ -4,7 +4,7 @@ import { StatusCodes } from '../app/status';
 import { AppWrapper } from '../app/app-wrapper';
 import { Context } from './context';
 import { MaybeArray } from '../utils';
-import { JSONResponseBuilder, CommonResponseBuilder } from '../app';
+import { JSONResponseBuilder, CommonResponseBuilder, ProvidedFor } from '../app';
 
 export type ControllerParamsCallback<TOut = any> = (context: Context) => Promise<MaybeArray<TOut>>;
 export type ControllerDataCallback<TOut = any, TData = any> = (context: Context, data: TData) => Promise<MaybeArray<TOut>>;
@@ -99,5 +99,48 @@ export class Controller extends AppWrapper<ControllerCallback> {
     delete<TOut>(route: string, func?: ControllerParamsCallback<TOut>): MethodDecorator | this {
         const method = Method.Delete;
         return this.wrap(method, route, func);
+    }
+
+    private static wrapDecoratedClass(route: string, method: Method): MethodDecorator {
+        return (target: any, propertyName: string | symbol, type: TypedPropertyDescriptor<any>) => {
+            if (!target || !(target instanceof Object) || Array.isArray(target) || !target.constructor) {
+                throw new Error('Can not decorate a non-compatible object');
+            }
+
+            const targetClass = (target as Object).constructor;
+            const metadata = ProvidedFor.getAppMetadata(targetClass);
+            if (!metadata || !metadata.appProvider) {
+                throw new Error('Can not extract an app-provider from ' + targetClass.name);
+            }
+            const controller = new Controller(metadata.appProvider);
+            const prop = target[propertyName];
+
+            controller.wrapEndpoint(method, route, prop);
+        };
+    }
+
+    static Get(route: string): MethodDecorator {
+        const method = Method.Get;
+        return this.wrapDecoratedClass(route, method);
+    }
+
+    static Post(route: string): MethodDecorator {
+        const method = Method.Post;
+        return this.wrapDecoratedClass(route, method);
+    }
+
+    static Put(route: string): MethodDecorator {
+        const method = Method.Put;
+        return this.wrapDecoratedClass(route, method);
+    }
+
+    static Patch(route: string): MethodDecorator {
+        const method = Method.Patch;
+        return this.wrapDecoratedClass(route, method);
+    }
+
+    static Delete(route: string): MethodDecorator {
+        const method = Method.Delete;
+        return this.wrapDecoratedClass(route, method);
     }
 }
