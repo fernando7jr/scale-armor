@@ -11,6 +11,8 @@ export interface EndpointsProvider {
     endpoint(method: Method, path: string, callback: EndpointCallback): this;
     endpoint(endpoint: Endpoint): this;
 
+    respondsTo(method: Method, route: string): boolean;
+
     readonly endpoints: readonly Endpoint[];
 }
 
