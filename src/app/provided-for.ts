@@ -1,4 +1,5 @@
-import 'reflect-metadata';
+import { Metadeta } from '../utils/metadeta';
+import { ClassConstructor } from '../utils/class';
 import { SimpleAppProvider } from './simple-app';
 import { AppProvider } from './app';
 
@@ -8,8 +9,6 @@ interface AppMetadata {
 }
 const metadataSymbol = Symbol('design:scar:');
 
-export type ClassConstructor = Function | Object;
-
 
 export function ProvidedFor(name: string): ClassDecorator {
     return (target: ClassConstructor) => {
@@ -18,12 +17,12 @@ export function ProvidedFor(name: string): ClassDecorator {
 };
 
 ProvidedFor.getAppMetadata = function (target: ClassConstructor): AppMetadata {
-    let metadata: AppMetadata = Reflect.getMetadata(metadataSymbol, target);
+    let metadata: AppMetadata = Metadeta.getMetadata(target, metadataSymbol);
     if (!metadata) {
         metadata = {
             appProvider: new SimpleAppProvider()
         };
-        Reflect.defineMetadata(metadataSymbol, metadata, target);
+        Metadeta.setMetadata(target, metadataSymbol, metadata);
     }
 
     return metadata;

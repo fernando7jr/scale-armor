@@ -5,7 +5,7 @@ import { App } from './app';
 
 describe(ProvidedFor.name, () => {
     it('should inject an app for the object', async () => {
-        const test = { a: 1 };
+        const test = { a: 1, name: 'test-obj' };
         ProvidedFor.defineAppProviderName('test', test);
         const metadata = ProvidedFor.getAppMetadata(test);
         expect(metadata).to.not.be.undefined;
