@@ -99,4 +99,38 @@ describe(Module.name, () => {
         expect(module.contains('custom')).to.be.true;
         expect(module.tryRequire('custom')).to.be.instanceOf(abc);
     });
+
+    it('should work with sub-modules', () => {
+        function test1() { }
+        function test2() { }
+        function test3() { }
+        function test4() { }
+        function test5() { }
+
+        const module1 = new Module().inject(makeInjectable(test1)).inject(makeInjectable(test2));
+        const module2 = new Module().inject(makeInjectable(test3)).inject(makeInjectable(test4));
+
+        module.import(module1)
+            .import(module2)
+            .inject(makeInjectable(test5));
+
+        expect(module.tryRequire(test1)).to.be.instanceOf(test1);
+        expect(module.tryRequire(test2)).to.be.instanceOf(test2);
+        expect(module.tryRequire(test3)).to.be.instanceOf(test3);
+        expect(module.tryRequire(test4)).to.be.instanceOf(test4);
+        expect(module.tryRequire(test5)).to.be.instanceOf(test5);
+
+        expect(module1.tryRequire(test1)).to.be.instanceOf(test1);
+        expect(module1.tryRequire(test2)).to.be.instanceOf(test2);
+        expect(module2.tryRequire(test3)).to.be.instanceOf(test3);
+        expect(module2.tryRequire(test4)).to.be.instanceOf(test4);
+
+        expect(module2.tryRequire(test1)).to.be.undefined;
+        expect(module2.tryRequire(test2)).to.be.undefined;
+        expect(module2.tryRequire(test5)).to.be.undefined;
+
+        expect(module1.tryRequire(test3)).to.be.undefined;
+        expect(module1.tryRequire(test4)).to.be.undefined;
+        expect(module1.tryRequire(test5)).to.be.undefined;
+    });
 });

@@ -2,6 +2,7 @@ import { Injectable, ClassType, InjectableRequirer } from "./injectable";
 import { ModuleDoesNotHaveInjectable, ModuleAlreadyHasInjectable } from "./error";
 
 export class Module implements InjectableRequirer {
+    private subModules: Module[] = [];
     private repository = new Map<string, Injectable<any>>();
 
     private resolveInjectableName(arg: string | ClassType): string {
@@ -11,6 +12,21 @@ export class Module implements InjectableRequirer {
         return arg;
     }
 
+    private findInSubModules<T>(name: string): T | undefined {
+        for (const subModule of this.subModules) {
+            const value = subModule.tryRequire<T>(name);
+            if (value) {
+                return value;
+            }
+        }
+        return undefined;
+    }
+
+    import(subModule: Module): this {
+        this.subModules.push(subModule);
+        return this;
+    }
+
     contains(name: string): boolean;
     contains(classType: ClassType): boolean;
     contains(arg: string | ClassType): boolean {
@@ -18,12 +34,13 @@ export class Module implements InjectableRequirer {
         return this.repository.has(name);
     }
 
-    inject<T>(injectable: Injectable<T>): void {
+    inject<T>(injectable: Injectable<T>): this {
         const name = injectable.name;
         if (this.contains(name)) {
             throw new ModuleAlreadyHasInjectable(name);
         }
         this.repository.set(name, injectable);
+        return this;
     }
 
     tryRequire<T>(name: string): T | undefined;
@@ -33,7 +50,7 @@ export class Module implements InjectableRequirer {
 
         const injectable = this.repository.get(name);
         if (!injectable) {
-            return undefined;
+            return this.findInSubModules(name);
         }
 
         let value = injectable.value;

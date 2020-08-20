@@ -26,7 +26,7 @@ export type InjectableOptions<T> = { readonly name?: string; } & (
 );
 
 export function makeInjectable<T>(classConstructor: ClassConstructor<T>, options?: InjectableOptions<T>): Injectable<T>;
-export function makeInjectable<T>(classType: ClassType, options: InjectableOptions<T> & { name: string; }): Injectable<T>;
+export function makeInjectable<T>(classType: ClassType, options?: InjectableOptions<T> & { name: string; }): Injectable<T>;
 export function makeInjectable<T>(arg: any, options?: InjectableOptions<T>): Injectable<T> {
     let name: string;
     let factory: InjectableFactory<T>;
