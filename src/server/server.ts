@@ -1,8 +1,8 @@
-import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider, ClassConstructor, ProvidedFor } from '../app';
-import { URL } from 'url';
-import { BeforeHook } from './request-reader';
 import { AddressInfo } from 'net';
-import { StatusCodes } from '../app/status';
+import { URL } from 'url';
+import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider, ProvidedFor } from '../app';
+import { ClassType } from '../utils';
+import { BeforeHook } from './request-reader';
 
 
 export type AfterHook = (request: RequestHead, response: Response) => Response;
@@ -57,8 +57,8 @@ export abstract class Server {
 
     app(app: App): this;
     app(appProvider: AppProvider, name: string): this;
-    app(classConstructor: ClassConstructor): this;
-    app(arg: App | AppProvider | ClassConstructor, name?: string): this {
+    app(classType: ClassType): this;
+    app(arg: App | AppProvider | ClassType, name?: string): this {
         let app: App;
         if (arg instanceof AppProvider) {
             if (!name) {

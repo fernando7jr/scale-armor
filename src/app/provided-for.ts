@@ -1,5 +1,5 @@
 import { Metadeta } from '../utils/metadeta';
-import { ClassConstructor } from '../utils/class';
+import { ClassType } from '../utils/class';
 import { SimpleAppProvider } from './simple-app';
 import { AppProvider } from './app';
 
@@ -11,12 +11,12 @@ const metadataSymbol = Symbol('design:scar:');
 
 
 export function ProvidedFor(name: string): ClassDecorator {
-    return (target: ClassConstructor) => {
+    return (target: ClassType) => {
         ProvidedFor.defineAppProviderName(name, target);
     };
 };
 
-ProvidedFor.getAppMetadata = function (target: ClassConstructor): AppMetadata {
+ProvidedFor.getAppMetadata = function (target: ClassType): AppMetadata {
     let metadata: AppMetadata = Metadeta.getMetadata(target, metadataSymbol);
     if (!metadata) {
         metadata = {
@@ -28,7 +28,7 @@ ProvidedFor.getAppMetadata = function (target: ClassConstructor): AppMetadata {
     return metadata;
 };
 
-ProvidedFor.defineAppProviderName = function (name: string, target: ClassConstructor): void {
+ProvidedFor.defineAppProviderName = function (name: string, target: ClassType): void {
     const metadata = ProvidedFor.getAppMetadata(target);
     metadata.name = name;
 };
