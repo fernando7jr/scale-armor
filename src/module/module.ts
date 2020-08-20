@@ -1,19 +1,35 @@
-import { Injectable, ClassConstructor, InjectableRequirer } from "./injectable";
-import { ModuleDoesNotHaveInjectable } from "./error";
+import { Injectable, ClassType, InjectableRequirer } from "./injectable";
+import { ModuleDoesNotHaveInjectable, ModuleAlreadyHasInjectable } from "./error";
 
 export class Module implements InjectableRequirer {
     private repository = new Map<string, Injectable<any>>();
 
+    private resolveInjectableName(arg: string | ClassType): string {
+        if (typeof arg !== 'string') {
+            return arg.name;
+        }
+        return arg;
+    }
+
+    contains(name: string): boolean;
+    contains(classType: ClassType): boolean;
+    contains(arg: string | ClassType): boolean {
+        const name = this.resolveInjectableName(arg);
+        return this.repository.has(name);
+    }
+
     inject<T>(injectable: Injectable<T>): void {
-        this.repository.set(injectable.name, injectable);
+        const name = injectable.name;
+        if (this.contains(name)) {
+            throw new ModuleAlreadyHasInjectable(name);
+        }
+        this.repository.set(name, injectable);
     }
 
     tryRequire<T>(name: string): T | undefined;
-    tryRequire<T>(classConstructor: ClassConstructor): T | undefined;
-    tryRequire<T>(arg: string | (Object & { name: string; }) | (Function & { name: string; })): T | undefined {
-        if (typeof arg !== 'string') {
-            return this.require(arg.name);
-        }
+    tryRequire<T>(classType: ClassType): T | undefined;
+    tryRequire<T>(arg: string | ClassType): T | undefined {
+        const name = this.resolveInjectableName(arg);
 
         const injectable = this.repository.get(name);
         if (!injectable) {
@@ -30,11 +46,13 @@ export class Module implements InjectableRequirer {
     }
 
     require<T>(name: string): T;
-    require<T>(classConstructor: ClassConstructor): T;
-    require<T>(arg: any): T {
-        const injectable = this.tryRequire<T>(arg);
+    require<T>(classType: ClassType): T;
+    require<T>(arg: string | ClassType): T {
+        const name = this.resolveInjectableName(arg);
+        const injectable = this.tryRequire<T>(name);
+
         if (!injectable) {
-            throw new ModuleDoesNotHaveInjectable('name' in arg ? arg.name : arg);
+            throw new ModuleDoesNotHaveInjectable(name);
         }
 
         return injectable;
