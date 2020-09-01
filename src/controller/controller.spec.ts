@@ -8,15 +8,17 @@ import {
     App,
     Endpoint,
     Response,
-    ProvidedFor
+    AppWrapper,
+    AppProvider,
+    ResponseBuilder
 } from '../app/';
 import { Context } from './context';
 import { Controller, ControllerDataCallback, ControllerParamsCallback } from './controller';
 
 
 class TestApp extends App {
-    constructor() {
-        super('/test');
+    constructor(name?: string) {
+        super(name || '/test');
     }
 
     protected digestRequest(requestReader: RequestReader, endpoint: Endpoint) {
@@ -40,6 +42,16 @@ describe(Controller.name, () => {
         };
 
         return fakeRequestreader as RequestReader;
+    };
+
+    const createAppProvider = () => {
+        return new class extends AppProvider {
+            build(name: string): App {
+                const app = new TestApp(name);
+                this.copyEndpoints(app);
+                return app;
+            }
+        }();
     };
 
     const resolveEndpoint = async (head: Partial<RequestHead>, body?: Partial<RequestBody>) => {
@@ -142,32 +154,6 @@ describe(Controller.name, () => {
         expect(response.status).to.deep.equals(StatusCodes.Ok);
         expect(response.contentType).to.contains('application/json');
         expect(response.body).to.equals(JSON.stringify({ data: body, method: Method.Put, query: { id: 2, age: 3 } }));
-    });
-
-    it('should inject endpoints through decorator', () => {
-        class Controller1 {
-            @controller.delete('/')
-            @controller.get('/')
-            @controller.patch('/')
-            @controller.post('/')
-            @controller.put('/')
-            @controller.get('/abc')
-            @controller.get('/test2')
-            @controller.get('/ctrl/beta')
-            async endpoint() {
-                return 'ok';
-            }
-        }
-
-        expect(app.endpoints.length).to.equals(8);
-        expect(app.respondsTo(Method.Get, '/')).to.be.true;
-        expect(app.respondsTo(Method.Delete, '/')).to.be.true;
-        expect(app.respondsTo(Method.Patch, '/')).to.be.true;
-        expect(app.respondsTo(Method.Post, '/')).to.be.true;
-        expect(app.respondsTo(Method.Put, '/')).to.be.true;
-        expect(app.respondsTo(Method.Get, '/abc')).to.be.true;
-        expect(app.respondsTo(Method.Get, '/test2')).to.be.true;
-        expect(app.respondsTo(Method.Get, '/ctrl/beta')).to.be.true;
     });
 
     it('should work with either json, form and binary', async () => {
@@ -283,21 +269,31 @@ describe(Controller.name, () => {
         expect(response.body).to.equals(JSON.stringify({ query: { test: 'ok' }, page: 1, pageSize: undefined }));
     });
 
-    it('should inject endpoints on a provided-app', () => {
-        @ProvidedFor('/test-app')
+    it('should inject endpoints on a provided-app', async () => {
         class TestControllerClass {
+            private message = 'ok';
+
             @Controller.Get('/test-endpoint')
+            @Controller.Post('/test-endpoint')
             public async testEndpoint(context: Context) {
-                return 'ok';
+                return this.message;
             }
         }
 
-        const metadata = ProvidedFor.getAppMetadata(TestControllerClass);
-        expect(metadata).to.not.be.undefined;
-        expect(metadata?.name).to.not.be.undefined;
-        expect(metadata?.appProvider).to.not.be.undefined;
-        expect(metadata?.appProvider.respondsTo(Method.Get, '/test-endpoint')).to.be.true;
-        const app = metadata?.appProvider.build(metadata?.name as string);
+        const obj = new TestControllerClass();
+        const appProvider = createAppProvider();
+        const app = AppWrapper.bindTargetToAppProvider(obj, createAppProvider()).build('/');
+        expect(appProvider.respondsTo(Method.Get, '/test-endpoint')).to.be.false;
         expect(app.respondsTo(Method.Get, '/test-endpoint')).to.be.true;
+
+        let responseBuilder: ResponseBuilder;
+        let response: Response;
+
+        responseBuilder = await app.resolve(createFakeRequestReader({ method: Method.Get, route: '/test-endpoint' }));
+        response = responseBuilder.build();
+        expect(response.body).to.equals('"ok"');
+        responseBuilder = await app.resolve(createFakeRequestReader({ method: Method.Post, route: '/test-endpoint' }));
+        response = responseBuilder.build();
+        expect(response.body).to.equals('"ok"');
     });
 });

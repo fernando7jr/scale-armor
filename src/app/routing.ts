@@ -14,44 +14,63 @@ export class Routing extends AppWrapper {
         return this;
     }
 
-    static for(app: App): Routing;
-    static for(appProvider: AppProvider): Routing;
-    static for(arg: any): Routing {
-        return new Routing(arg);
-    }
-
-    get(route: string): MethodDecorator;
-    get(route: string, func: EndpointCallback): this;
-    get(route: string, func?: EndpointCallback): MethodDecorator | this {
+    get(route: string, func: EndpointCallback): this {
         const method = Method.Get;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    post(route: string): MethodDecorator;
-    post(route: string, func: EndpointCallback): this;
-    post(route: string, func?: EndpointCallback): MethodDecorator | this {
+    post(route: string, func: EndpointCallback): this {
         const method = Method.Post;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    put(route: string): MethodDecorator;
-    put(route: string, func: EndpointCallback): this;
-    put(route: string, func?: EndpointCallback): MethodDecorator | this {
+    put(route: string, func: EndpointCallback): this {
         const method = Method.Put;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    patch(route: string): MethodDecorator;
-    patch(route: string, func: EndpointCallback): this;
-    patch(route: string, func?: EndpointCallback): MethodDecorator | this {
+    patch(route: string, func: EndpointCallback): this {
         const method = Method.Patch;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    delete(route: string): MethodDecorator;
-    delete(route: string, func: EndpointCallback): this;
-    delete(route: string, func?: EndpointCallback): MethodDecorator | this {
+    delete(route: string, func: EndpointCallback): this {
         const method = Method.Delete;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
+    }
+
+    private static wrapInstanceless(method: Method, route: string): MethodDecorator {
+        return <T extends Object>(target: T | any, propertyName: string | symbol, type: TypedPropertyDescriptor<T>) => {
+            this.decorateClassMethod<T>(target, (endpointsProvider, self) => {
+                const prop: (...args: any[]) => Promise<any> = Reflect.get(self, propertyName);
+                const routing = new Routing(endpointsProvider);
+                routing.wrapEndpoint(method, route, (...args: any[]) => prop.apply(self, args));
+            });
+        };
+    }
+
+    static Get(route: string): MethodDecorator {
+        const method = Method.Get;
+        return this.wrapInstanceless(method, route);
+    }
+
+    static Post(route: string): MethodDecorator {
+        const method = Method.Post;
+        return this.wrapInstanceless(method, route);
+    }
+
+    static Put(route: string): MethodDecorator {
+        const method = Method.Put;
+        return this.wrapInstanceless(method, route);
+    }
+
+    static Patch(route: string): MethodDecorator {
+        const method = Method.Patch;
+        return this.wrapInstanceless(method, route);
+    }
+
+    static Delete(route: string): MethodDecorator {
+        const method = Method.Delete;
+        return this.wrapInstanceless(method, route);
     }
 }

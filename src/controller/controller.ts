@@ -2,14 +2,13 @@ import { Request, Method, Params } from '../app/request';
 import { EndpointCallback } from '../app/endpoint';
 import { StatusCodes } from '../app/status';
 import { AppWrapper } from '../app/app-wrapper';
+import { JSONResponseBuilder, CommonResponseBuilder } from '../app/response-builder';
 import { Context } from './context';
 import { MaybeArray } from '../utils';
-import { JSONResponseBuilder, CommonResponseBuilder, ProvidedFor } from '../app';
 
 export type ControllerParamsCallback<TOut = any> = (context: Context) => Promise<MaybeArray<TOut>>;
 export type ControllerDataCallback<TOut = any, TData = any> = (context: Context, data: TData) => Promise<MaybeArray<TOut>>;
 export type ControllerCallback<TOut = any, TData = any> = ControllerParamsCallback<TOut> | ControllerDataCallback<TOut, TData>;
-
 
 export class Controller extends AppWrapper<ControllerCallback> {
     private static reservedQueryParams = ['$page', '$pageSize'] as const;
@@ -66,81 +65,63 @@ export class Controller extends AppWrapper<ControllerCallback> {
         return this;
     }
 
-    get(route: string): MethodDecorator;
-    get<TOut>(route: string, func: ControllerParamsCallback<TOut>): this;
-    get<TOut>(route: string, func?: ControllerParamsCallback<TOut>): MethodDecorator | this {
+    get<TOut>(route: string, func: ControllerParamsCallback<TOut>): this {
         const method = Method.Get;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    post(route: string): MethodDecorator;
-    post<TOut, TData>(route: string, func: ControllerDataCallback<TOut, TData>): this;
-    post<TOut, TData>(route: string, func?: ControllerDataCallback<TOut, TData>): MethodDecorator | this {
+    post<TOut>(route: string, func: ControllerDataCallback<TOut>): this {
         const method = Method.Post;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    put(route: string): MethodDecorator;
-    put<TOut, TData>(route: string, func: ControllerDataCallback<TOut, TData>): this;
-    put<TOut, TData>(route: string, func?: ControllerDataCallback<TOut, TData>): MethodDecorator | this {
+    put<TOut>(route: string, func: ControllerDataCallback<TOut>): this {
         const method = Method.Put;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    patch(route: string): MethodDecorator;
-    patch<TOut, TData>(route: string, func: ControllerDataCallback<TOut, TData>): this;
-    patch<TOut, TData>(route: string, func?: ControllerDataCallback<TOut, TData>): MethodDecorator | this {
+    patch<TOut>(route: string, func: ControllerDataCallback<TOut>): this {
         const method = Method.Patch;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    delete(route: string): MethodDecorator;
-    delete<TOut>(route: string, func: ControllerParamsCallback<TOut>): this;
-    delete<TOut>(route: string, func?: ControllerParamsCallback<TOut>): MethodDecorator | this {
+    delete<TOut>(route: string, func: ControllerParamsCallback<TOut>): this {
         const method = Method.Delete;
-        return this.wrap(method, route, func);
+        return this.wrapEndpoint(method, route, func);
     }
 
-    private static wrapDecoratedClass(route: string, method: Method): MethodDecorator {
-        return (target: any, propertyName: string | symbol, type: TypedPropertyDescriptor<any>) => {
-            if (!target || !(target instanceof Object) || Array.isArray(target) || !target.constructor) {
-                throw new Error('Can not decorate a non-compatible object');
-            }
-
-            const targetClass = (target as Object).constructor;
-            const metadata = ProvidedFor.getAppMetadata(targetClass);
-            if (!metadata || !metadata.appProvider) {
-                throw new Error('Can not extract an app-provider from ' + targetClass.name);
-            }
-            const controller = new Controller(metadata.appProvider);
-            const prop = target[propertyName];
-
-            controller.wrapEndpoint(method, route, prop);
+    private static wrapInstanceless(method: Method, route: string): MethodDecorator {
+        return <T extends Object>(target: T | any, propertyName: string | symbol, type: TypedPropertyDescriptor<T>) => {
+            this.decorateClassMethod<T>(target, (endpointsProvider, self) => {
+                const prop: (...args: any[]) => Promise<any> = Reflect.get(self, propertyName);
+                const controller = new Controller(endpointsProvider);
+                controller.wrapEndpoint(method, route, (...args: any[]) => prop.apply(self, args));
+            });
         };
     }
 
     static Get(route: string): MethodDecorator {
         const method = Method.Get;
-        return this.wrapDecoratedClass(route, method);
+        return this.wrapInstanceless(method, route);
     }
 
     static Post(route: string): MethodDecorator {
         const method = Method.Post;
-        return this.wrapDecoratedClass(route, method);
+        return this.wrapInstanceless(method, route);
     }
 
     static Put(route: string): MethodDecorator {
         const method = Method.Put;
-        return this.wrapDecoratedClass(route, method);
+        return this.wrapInstanceless(method, route);
     }
 
     static Patch(route: string): MethodDecorator {
         const method = Method.Patch;
-        return this.wrapDecoratedClass(route, method);
+        return this.wrapInstanceless(method, route);
     }
 
     static Delete(route: string): MethodDecorator {
         const method = Method.Delete;
-        return this.wrapDecoratedClass(route, method);
+        return this.wrapInstanceless(method, route);
     }
 }

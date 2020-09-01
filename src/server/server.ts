@@ -1,7 +1,6 @@
 import { AddressInfo } from 'net';
 import { URL } from 'url';
-import { App, RequestHead, Response, RequestReader, StatusResponseBuilder, Endpoint, SimpleApp, AppProvider, ProvidedFor } from '../app';
-import { ClassType } from '../utils';
+import { App, RequestHead, Response, RequestReader, Endpoint, AppProvider, AppWrapper } from '../app';
 import { BeforeHook } from './request-reader';
 
 
@@ -55,21 +54,25 @@ export abstract class Server {
         return this.apps.get(name);
     }
 
+    private buildApp(appProvider: AppProvider, name?: string): App {
+        if (!name) {
+            throw new Error('An app-provider needs a name for building the real app');
+        }
+        return appProvider.build(name);
+    }
+
     app(app: App): this;
     app(appProvider: AppProvider, name: string): this;
-    app(classType: ClassType): this;
-    app(arg: App | AppProvider | ClassType, name?: string): this {
+    app(appProvider: AppProvider, name: string, bindTo: object): this;
+    app(arg: App | AppProvider, name?: string, bindTo?: object): this {
         let app: App;
         if (arg instanceof AppProvider) {
-            if (!name) {
-                throw new Error('An app-provider needs a name for building the real app');
+            if (bindTo) {
+                arg = AppWrapper.bindTargetToAppProvider(bindTo, arg);
             }
-            app = arg.build(name);
+            app = this.buildApp(arg, name);
         } else if (arg instanceof App) {
             app = arg as App;
-        } else if (arg) {
-            const metadata = ProvidedFor.getAppMetadata(arg);
-            return this.app(metadata.appProvider, metadata.name as string);
         } else {
             throw new Error('Could not find an app in the provided parameters');
         }

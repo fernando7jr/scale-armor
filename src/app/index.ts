@@ -7,4 +7,3 @@ export * from './app';
 export * from './app-wrapper';
 export * from './routing';
 export * from './simple-app';
-export * from './provided-for';

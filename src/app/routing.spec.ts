@@ -1,16 +1,17 @@
 import { expect } from 'chai';
-import { App } from './app';
+import { App, AppProvider } from './app';
 import { Method } from '../router';
-import { RequestHead, RequestBody, RequestReader } from './request';
+import { RequestHead, RequestBody, RequestReader, ResponseBuilder, Response } from './request';
 import { StatusCodes } from './status';
 import { JSONResponseBuilder, StatusResponseBuilder, CommonResponseBuilder } from './response-builder';
 import { Routing } from './routing';
 import { Endpoint } from './endpoint';
+import { AppWrapper } from './app-wrapper';
 
 
 class TestApp extends App {
-    constructor() {
-        super('/test');
+    constructor(name?: string) {
+        super(name || '/test');
     }
 
     protected digestRequest(requestReader: RequestReader, endpoint: Endpoint) {
@@ -34,6 +35,16 @@ describe(Routing.name, () => {
         };
 
         return fakeRequestreader as RequestReader;
+    };
+
+    const createAppProvider = () => {
+        return new class extends AppProvider {
+            build(name: string): App {
+                const app = new TestApp(name);
+                this.copyEndpoints(app);
+                return app;
+            }
+        }();
     };
 
     beforeEach(() => {
@@ -60,7 +71,7 @@ describe(Routing.name, () => {
         expect(app.respondsTo(Method.Get, '/af')).to.be.true;
         expect(app.respondsTo(Method.Patch, '/f')).to.be.true;
 
-        Routing.for(app).get('/d', func);
+        new Routing(app).get('/d', func);
         expect(app.endpoints.length).to.equals(8);
         expect(app.respondsTo(Method.Get, '/d')).to.be.true;
     });
@@ -88,32 +99,34 @@ describe(Routing.name, () => {
         expect(response.contentType).to.equals('application/json');
     });
 
-    it('should inject endpoints through decorator', async () => {
-        class ControllerTest1 {
-            @routing.get('/test')
-            @routing.patch('/test')
-            @routing.post('/test')
-            @routing.put('/test')
-            @routing.delete('/test24')
-            @routing.get('/tees')
-            @routing.get('/tees/24')
-            async test() {
-                return new StatusResponseBuilder(StatusCodes.Ok);
+    it('should inject endpoints on a provided-app', async () => {
+        class TestControllerClass {
+            private message = 'ok';
+
+            @Routing.Post('/test-endpoint')
+            @Routing.Get('/test-endpoint')
+            public async testEndpoint() {
+                return new JSONResponseBuilder(this.message, StatusCodes.Ok);
             }
-        };
-        const controllers = new ControllerTest1();
+        }
 
-        expect(app.endpoints.length).to.equals(7);
-        expect(app.respondsTo(Method.Get, '/test')).to.be.true;
-        expect(app.respondsTo(Method.Patch, '/test')).to.be.true;
-        expect(app.respondsTo(Method.Post, '/test')).to.be.true;
-        expect(app.respondsTo(Method.Put, '/test')).to.be.true;
-        expect(app.respondsTo(Method.Delete, '/test24')).to.be.true;
-        expect(app.respondsTo(Method.Get, '/tees')).to.be.true;
-        expect(app.respondsTo(Method.Get, '/tees/24')).to.be.true;
+        const obj = new TestControllerClass();
+        const appProvider = createAppProvider();
+        const app = AppWrapper.bindTargetToAppProvider(obj, createAppProvider()).build('/');
+        expect(app.name).to.equals('/');
+        expect(appProvider.respondsTo(Method.Get, '/test-endpoint')).to.be.false;
+        expect(appProvider.respondsTo(Method.Post, '/test-endpoint')).to.be.false;
+        expect(app.respondsTo(Method.Get, '/test-endpoint')).to.be.true;
+        expect(app.respondsTo(Method.Post, '/test-endpoint')).to.be.true;
 
-        const responseBuilder = await controllers.test();
-        expect(responseBuilder).to.be.instanceOf(CommonResponseBuilder);
-        expect(responseBuilder).to.be.instanceOf(StatusResponseBuilder);
+        let responseBuilder: ResponseBuilder;
+        let response: Response;
+
+        responseBuilder = await app.resolve(createFakeRequestReader({ method: Method.Get, route: '/test-endpoint' }));
+        response = responseBuilder.build();
+        expect(response.body).to.equals('"ok"');
+        responseBuilder = await app.resolve(createFakeRequestReader({ method: Method.Post, route: '/test-endpoint' }));
+        response = responseBuilder.build();
+        expect(response.body).to.equals('"ok"');
     });
 });

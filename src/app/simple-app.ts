@@ -52,9 +52,7 @@ export class SimpleApp extends App {
 export class SimpleAppProvider extends AppProvider {
     build(name: string): App {
         const app = new SimpleApp(name);
-        for (const endpoint of this.endpoints) {
-            app.endpoint(endpoint);
-        }
+        this.copyEndpoints(app);
         return app;
     }
 }

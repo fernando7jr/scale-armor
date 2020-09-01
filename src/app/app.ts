@@ -90,5 +90,11 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
 }
 
 export abstract class AppProvider extends _BaseApp {
+    protected copyEndpoints(endpointsProvider: EndpointsProvider): void {
+        for (const endpoint of this.endpoints) {
+            endpointsProvider.endpoint(endpoint);
+        }
+    }
+
     abstract build(name: string): App;
 }
