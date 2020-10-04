@@ -1,3 +1,3 @@
-export * from './metadeta';
+export * from './paging';
 export * from './class';
 export * from './maybe-array';
