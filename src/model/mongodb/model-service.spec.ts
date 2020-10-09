@@ -458,4 +458,28 @@ describe(MongoDbModelService.name, () => {
             books: ['A', 'B']
         });
     });
+
+    it('should delete all the documents', async () => {
+        const documents = getMockData();
+        await modelService.createAll(documents);
+        const deleteResult = await modelService.deleteAll({
+            $on: {
+                age: { $lt: 20 }
+            }
+        });
+
+        expect(deleteResult.deleted).to.be.true;
+        expect(deleteResult.matched).to.equals(5);
+
+        let result = await modelService.findAll({
+            $on: {
+                age: { $lt: 20 }
+            }
+        });
+        expect(result.total).to.equals(0);
+        expect(result.data.length).to.equals(0);
+        result = await modelService.findAll({});
+        expect(result.total).to.equals(1);
+        expect(result.data.length).to.equals(1);
+    });
 });
