@@ -1,4 +1,4 @@
-import { ClientSession, Cursor as __Cursor, Db, MongoClient } from 'mongodb';
+import { ClientSession, Cursor as __Cursor, Db, MongoClient, Collection } from 'mongodb';
 import { PagedData, PagingOptions } from '../../utils';
 import { Cursor, DeleteResult, IdLess, Model, ModelService, IdOptional, ReplaceResult, Transaction, UpdateResult, InsertOrUpdateResult } from '../model-service';
 import { Id, Query, UpdateQuery } from '../query';
@@ -280,5 +280,10 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
 
     get serviceName() {
         return 'mongodb';
+    }
+
+    async getNativeCollection(): Promise<Collection> {
+        const conenction = await this.connect();
+        return conenction.collection;
     }
 }
