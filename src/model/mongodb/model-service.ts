@@ -1,6 +1,6 @@
-import { ClientSession, Collection, Cursor as __Cursor, MongoClient } from 'mongodb';
+import { ClientSession, Cursor as __Cursor, Db, MongoClient } from 'mongodb';
 import { PagedData, PagingOptions } from '../../utils';
-import { Cursor, DeleteResult, IdLess, Model, ModelService, IdOptional, ReplaceResult, Transaction, UpdateResult } from '../model-service';
+import { Cursor, DeleteResult, IdLess, Model, ModelService, IdOptional, ReplaceResult, Transaction, UpdateResult, InsertOrUpdateResult } from '../model-service';
 import { Id, Query, UpdateQuery } from '../query';
 import { MongoDbCursor } from './cursor';
 import { MongoDbTransaction } from './transaction';
@@ -8,18 +8,39 @@ import { MongoDbTranslater } from './translater';
 
 export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> = unknown> implements ModelService<T, TId> {
     private translater = new MongoDbTranslater<T, TId>();
+    private __inited = false;
 
     constructor(
-        private collectionName: string,
         private databaseName: string,
+        private collectionName: string,
         private client: MongoClient) { }
 
     private async connect() {
         const connection = await this.client.connect();
         const db = connection.db(this.databaseName);
-        return db.collection<T>(this.collectionName, {
-            strict: false,
-        });
+
+        await this.__ensureInitialization(db);
+
+        const collection = db.collection<
+            T>(this.collectionName, {
+                strict: false,
+            });
+
+        return {
+            conn: connection,
+            db,
+            collection,
+        };
+    }
+
+    private async __ensureInitialization(db: Db) {
+        if (!this.__inited) {
+            const collections = await db.collections();
+            if (!collections.some(c => c.collectionName === this.collectionName)) {
+                await db.createCollection(this.collectionName);
+            }
+            this.__inited = true;
+        }
     }
 
     withTransaction(callback: (transaction: Transaction) => Promise<void>): void {
@@ -63,7 +84,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         const mongodbQuery = this.translater.translateFindQuery(query);
         const findOptions = this.translater.translateFindOptions(options, session);
         const connection = await this.connect();
-        const cursor = connection.find<T>(mongodbQuery, findOptions);
+        const cursor = connection.collection.find<T>(mongodbQuery, findOptions);
         const hasNext = await cursor.hasNext();
 
         return new MongoDbCursor(cursor, hasNext);
@@ -74,7 +95,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         const filter = this.translater.translateFindQuery(query);
         const connection = await this.connect();
         const options = session ? { session } : {};
-        const result = await connection.updateOne(filter, update as any, options);
+        const result = await connection.collection.updateOne(filter, update as any, options);
 
         return {
             matched: result.matchedCount,
@@ -87,7 +108,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         const filter = this.translater.translateFindQuery(query);
         const connection = await this.connect();
         const options = session ? { session } : {};
-        const result = await connection.updateMany(filter, update as any, options);
+        const result = await connection.collection.updateMany(filter, update as any, options);
 
         return {
             matched: result.matchedCount,
@@ -95,29 +116,33 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         };
     }
 
-    async updateOrInsert<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult> {
+    async updateOrInsert<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<InsertOrUpdateResult<any>> {
         const { session } = this.getOptionsAndTransaction(transaction);
         const filter = this.translater.translateFindQuery(query);
         const connection = await this.connect();
         const options = session ? { session, upsert: true } : { upsert: true };
-        const result = await connection.updateOne(filter, update as any, options);
+        const result = await connection.collection.updateOne(filter, update as any, options);
 
         return {
             matched: result.matchedCount,
             updated: result.modifiedCount > 0,
+            insertedId: result.upsertedId?._id,
+            inserted: result.upsertedCount > 0
         };
     }
 
-    async updateOrInsertAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult> {
+    async updateOrInsertAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<InsertOrUpdateResult<any>> {
         const { session } = this.getOptionsAndTransaction(transaction);
         const filter = this.translater.translateFindQuery(query);
         const connection = await this.connect();
         const options = session ? { session, upsert: true } : { upsert: true };
-        const result = await connection.updateMany(filter, update as any, options);
+        const result = await connection.collection.updateMany(filter, update as any, options);
 
         return {
             matched: result.matchedCount,
             updated: result.modifiedCount > 0,
+            insertedId: result.upsertedId?._id,
+            inserted: result.upsertedCount > 0
         };
     }
 
@@ -126,7 +151,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         const filter = this.translater.translateFindQuery(query);
         const connection = await this.connect();
         const options = session ? { session } : {};
-        const result = await connection.deleteMany(filter, options);
+        const result = await connection.collection.deleteMany(filter, options);
 
         return {
             deleted: (result.deletedCount || 0) > 0,
@@ -139,7 +164,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         const filter = this.translater.translateFindQuery(query);
         const connection = await this.connect();
         const options = session ? { session } : {};
-        const result = await connection.findOneAndReplace(filter, model, options);
+        const result = await connection.collection.findOneAndReplace(filter, model, options);
 
         return {
             replaced: result.ok ? true : false,
@@ -151,7 +176,8 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
     async drop(transaction?: Transaction): Promise<void> {
         const { session } = this.getOptionsAndTransaction(transaction);
         const connection = await this.connect();
-        await connection.drop(session ? { session } : undefined);
+
+        await connection.collection.drop(session ? { session } : undefined);
     }
 
     async clear(transaction?: Transaction): Promise<void> {
@@ -167,7 +193,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
     async find<Q extends Query<T, TId>>(query: Q): Promise<T | undefined> {
         const connection = await this.connect();
         const mongodbQuery = this.translater.translateFindQuery(query);
-        const result = await connection.findOne<T>(mongodbQuery);
+        const result = await connection.collection.findOne<T>(mongodbQuery);
 
         return result || undefined;
     }
@@ -194,21 +220,24 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
 
     async create(model: IdOptional<T, TId>): Promise<T | undefined> {
         const connection = await this.connect();
-        const result = await connection.insertOne(model as any);
+        const result = await connection.collection.insertOne(model as any);
 
         return result.ops[0] as T;
     }
 
     async createAll(models: IdOptional<T, TId>[]): Promise<T[]> {
         const connection = await this.connect();
-        const result = await connection.insertMany(models as any[], { ordered: false });
+        const result = await connection.collection.insertMany(models as any[], { ordered: false });
 
         return result.ops as T[];
     }
 
     async patch(id: TId, model: Partial<IdLess<T>>): Promise<T | undefined> {
         const connection = await this.connect();
-        const result = await connection.findOneAndUpdate({ _id: id as any }, { $set: model as any }, { upsert: false });
+        const result = await connection.collection.findOneAndUpdate({ _id: id as any }, { $set: model as any }, {
+            upsert: false,
+            returnOriginal: false
+        });
 
         return result.value;
     }
@@ -219,16 +248,19 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         if ('_id' in doc) {
             delete doc['_id'];
         }
-        const result = await connection.findOneAndUpdate({
+        const result = await connection.collection.findOneAndUpdate({
             _id: model._id as any
-        }, { $set: doc as any }, { upsert: true });
+        }, { $set: doc as any }, {
+            upsert: true,
+            returnOriginal: false
+        });
 
         return result.value;
     }
 
     async deleteById(id: TId): Promise<DeleteResult> {
         const connection = await this.connect();
-        const result = await connection.deleteOne({
+        const result = await connection.collection.deleteOne({
             _id: id as any
         });
 

@@ -54,7 +54,8 @@ export type Query<T, TId extends Id<any>> = QueryOn<NoQueryKeywords<T>> | QueryB
 export type UpdateQuery<T> = Partial<{
     $set: Partial<{ [K in keyof T]: T[keyof T] }>;
     $unset: Partial<{ [K in keyof T]: boolean }>;
+    $addToSet: Partial<{ [K in keyof T]: T[keyof T] }>;
     $push: Partial<{ [K in keyof T]: T[keyof T] }>;
-    $pop: Partial<{ [K in keyof T]: T[keyof T] | { $index: number; } }>;
+    $pop: Partial<{ [K in keyof T]: number | { $index: number; } }>;
 }>;
 

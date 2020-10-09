@@ -16,8 +16,9 @@ export interface UpdateResult {
     updated: boolean;
     matched: number;
 }
-export interface InsertOrUpdateResult<TId extends Id<unknown> = unknown> extends
-    InsertResult<TId>, UpdateResult {
+export interface InsertOrUpdateResult<TId extends Id<unknown> = unknown> extends UpdateResult {
+    insertedId?: TId;
+    inserted: boolean;
 }
 export interface DeleteResult {
     deleted: boolean;
@@ -54,8 +55,8 @@ export interface ModelService<T extends Model<TId>, TId extends Id<unknown> = un
     select(query: Query<T, TId>, options?: Partial<PagingOptions>, transaction?: Transaction): Promise<Cursor<T>>;
     update<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
     updateAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
-    updateOrInsert<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
-    updateOrInsertAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
+    updateOrInsert<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<InsertOrUpdateResult<any>>;
+    updateOrInsertAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<InsertOrUpdateResult<any>>;
     deleteAll<Q extends Query<T, TId>>(query: Q, transaction?: Transaction): Promise<DeleteResult>;
     replace<Q extends Query<T, TId>>(query: Q, model: T, transaction?: Transaction): Promise<ReplaceResult<TId>>;
 
