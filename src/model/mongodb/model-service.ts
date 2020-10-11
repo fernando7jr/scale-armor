@@ -90,6 +90,11 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         return new MongoDbCursor(cursor, hasNext);
     }
 
+    async count(query?: Query<T, TId>, transaction?: Transaction): Promise<number> {
+        const cursor = await this.select(query || {}, transaction);
+        return await cursor.count(false);
+    }
+
     async update<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult> {
         const { session } = this.getOptionsAndTransaction(transaction);
         const filter = this.translater.translateFindQuery(query);

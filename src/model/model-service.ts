@@ -53,6 +53,7 @@ export interface ModelService<T extends Model<TId>, TId extends Id<unknown> = un
     withTransaction(callback: (transaction: Transaction) => Promise<void>): void;
     select(query: Query<T, TId>, transaction?: Transaction): Promise<Cursor<T>>;
     select(query: Query<T, TId>, options?: Partial<PagingOptions>, transaction?: Transaction): Promise<Cursor<T>>;
+    count(query?: Query<T, TId>, transaction?: Transaction): Promise<number>;
     update<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
     updateAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
     updateOrInsert<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<InsertOrUpdateResult<any>>;
