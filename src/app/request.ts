@@ -65,7 +65,11 @@ export interface RequestReader {
     /** Checks if a body is present */
     readonly hasBody: boolean;
 
-    /** Read the body and return a whole Request object */
+    /**
+     * Read the body and return a whole Request object (heading + body).
+     * @async
+     * @returns a promise to the request
+     */
     read(): Promise<Request>;
 
     /** 

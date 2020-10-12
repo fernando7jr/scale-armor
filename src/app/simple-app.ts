@@ -4,14 +4,31 @@ import { App, AppProvider } from './app';
 import { TraceableError } from './error';
 
 
+/**
+ * A simple implementation of an App
+ * Can be used as-is or extended.
+ * @class
+ * @extends App
+ */
 export class SimpleApp extends App {
     private notFoundEndpointCallback?: EndpointCallback;
     private requestHandlingErrorCallback?: (requestReader: RequestReader, error: TraceableError) => Promise<ResponseBuilder>;
 
+    /**
+     * @constructor
+     * @param name - the name for the app
+     */
     constructor(name: string) {
         super(name);
     }
 
+    /** 
+     * Handle the case when there is no endpoint for the request
+     * The custom handler is used if it is set
+     * @async
+     * @param requestReader - the requestReader which did not resolve to any endpoint
+     * @returns a promise to a response-builder
+     */
     protected async resolveNotFoundEndpoint(requestReader: RequestReader): Promise<ResponseBuilder> {
         if (this.notFoundEndpointCallback) {
             return await this.notFoundEndpointCallback(requestReader);
@@ -19,6 +36,13 @@ export class SimpleApp extends App {
         return super.resolveNotFoundEndpoint(requestReader);
     }
 
+    /**
+     * Handle the case when an error occurs during request digestion
+     * * The custom handler is used if it is set
+     * @async
+     * @param requestReader - the requestReader which is being digested
+     * @param error - the caused error
+     */
     protected async resolveRequestHandlingErrorEndpoint(requestReader: RequestReader, error: TraceableError): Promise<ResponseBuilder> {
         if (this.requestHandlingErrorCallback) {
             return await this.requestHandlingErrorCallback(requestReader, error);
@@ -26,11 +50,26 @@ export class SimpleApp extends App {
         return super.resolveRequestHandlingErrorEndpoint(requestReader, error);
     }
 
+    /**
+     * Get the endpoint for the given RequestReader
+     * @async
+     * @param requestReader - the request reader to match an endpoint
+     */
     protected async digestRequest(requestReader: RequestReader, endpoint: Endpoint): Promise<ResponseBuilder> {
         return endpoint.callback(requestReader);
     }
 
+    /**
+     * Set a custom handler for when there is no endpoint for the request
+     * @param callback - the endpoint callback
+     * @return @this
+     */
     setNotFoundCallback(callback?: EndpointCallback): this;
+    /**
+     * Set a custom handler for when there is no endpoint for the request
+     * @param endpoint - an endpoint like object containing the callback
+     * @return @this
+     */
     setNotFoundCallback(endpoint?: Pick<Endpoint, 'callback'>): this;
     setNotFoundCallback(arg?: Pick<Endpoint, 'callback'> | EndpointCallback): this {
         if (!arg) {
@@ -42,6 +81,11 @@ export class SimpleApp extends App {
         return this;
     }
 
+    /**
+     * Set a custom handler for when there is an error during request digestion
+     * @param callback - the endpoint callback
+     * @return @this
+     */
     setRequesthandlingErrorCallback(callback?: (requestReader: RequestReader, error: TraceableError) => Promise<ResponseBuilder>): this {
         this.requestHandlingErrorCallback = callback;
 
@@ -49,10 +93,20 @@ export class SimpleApp extends App {
     }
 }
 
+/**
+ * An app-provider for simple-apps
+ * @class
+ * @extends AppProvider
+ */
 export class SimpleAppProvider extends AppProvider {
+    /**
+     * Build an app with the given name
+     * @param name - the name for the app
+     * @returns an app with the given name from the defined blueprint in this AppProvider
+     */
     build(name: string): App {
         const app = new SimpleApp(name);
-        this.copyEndpoints(app);
+        this.copyEndpointsTo(app);
         return app;
     }
 }

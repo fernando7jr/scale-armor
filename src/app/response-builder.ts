@@ -1,12 +1,24 @@
 import { ResponseBuilder, Headers, Response } from "./request";
 import { StatusCode } from "./status";
 
+/**
+ * The base implementation of a ResponseBuilder
+ * Can be used directly for more control of how the response should be built.
+ * @class
+ */
 export class CommonResponseBuilder implements ResponseBuilder {
     protected _headers: Headers;
     protected _contentType: string;
     protected _body: any;
     protected _status: StatusCode;
 
+    /**
+     * @constructor
+     * @param response.headers default {} - the readers dict for the response
+     * @param response.contentType default 'text/html' - the content-type for the response
+     * @param response.body - the body for the response
+     * @param response.status the status code for the response
+     */
     constructor(response: {
         headers?: Headers,
         contentType?: string,
@@ -19,22 +31,30 @@ export class CommonResponseBuilder implements ResponseBuilder {
         this._status = response.status;
     }
 
+    /** Get the content-type */
     get contentType(): string {
         return this._contentType;
     }
 
+    /** Get the headers dict */
     get headers(): Headers {
         return this._headers;
     }
 
+    /** Get the status code */
     get status(): StatusCode {
         return this._status;
     }
 
+    /** Get the body */
     protected get body(): any {
         return this._body;
     }
 
+    /**
+     * Build the Response object
+     * @returns the response
+     */
     build(): Response {
         const body = this.body;
         return {
@@ -46,7 +66,19 @@ export class CommonResponseBuilder implements ResponseBuilder {
     }
 }
 
+/**
+ * 'text/plain' specialized ResponseBuilder.
+ * All built responses will contain the mime-type set to 'text/plain'
+ * @class
+ * @extends TextResponseBuilder
+ */
 export class TextResponseBuilder extends CommonResponseBuilder {
+    /**
+     * @constructor
+     * @param response.body - the body for the response
+     * @param response.status the status code for the response
+     * @param response.headers default {} - the readers dict for the response
+     */
     constructor(body: string | undefined, status: StatusCode, headers?: Headers) {
         super({
             contentType: 'text/plain',
@@ -56,16 +88,30 @@ export class TextResponseBuilder extends CommonResponseBuilder {
         });
     }
 
+    /** Get the body. Defaults to '' when not set */
     protected get body(): any {
         return super.body || '';
     }
 }
 
+/**
+ * A ResponseBuilder dedicated to responses based on the status code
+ * @class
+ * @extends TextResponseBuilder
+ */
 export class StatusResponseBuilder extends TextResponseBuilder {
+    /**
+     * @constructor
+     * @param status - The status code
+     * @param message - An optional message to be used in the body
+     */
     constructor(status: StatusCode, message?: string) {
         super(message, status);
     }
 
+    /** 
+     * Get the body
+     */
     protected get body(): any {
         const body = super.body;
         const status = this.status;
@@ -76,7 +122,19 @@ export class StatusResponseBuilder extends TextResponseBuilder {
     }
 }
 
+/**
+ * JSON specialized ResponseBuilder
+ * Every response built will contain a valid json string for the body
+ * @class
+ * @extends CommonResponseBuilder
+ */
 export class JSONResponseBuilder extends CommonResponseBuilder {
+    /**
+     * @constructor
+     * @param body - any json serializable value for the body
+     * @param status - the status code for the response
+     * @param headers default {} - the readers dict for the response
+     */
     constructor(body: any, status: StatusCode, headers?: Headers) {
         super({
             headers,
@@ -86,12 +144,23 @@ export class JSONResponseBuilder extends CommonResponseBuilder {
         });
     }
 
-    protected get body(): any {
+    /** Get the serialized body */
+    protected get body(): string {
         return JSON.stringify(super.body);
     }
 }
 
+/**
+ * A JSON version of StatusResponseBuilder dedicated to responses based on the status code
+ * @class
+ * @extends JSONResponseBuilder
+ */
 export class JSONStatusResponseBuilder extends JSONResponseBuilder {
+    /**
+     * @constructor
+     * @param status - the status code for the response
+     * @param content - an optional string message
+     */
     constructor(status: StatusCode, content?: string) {
         super({
             status: status.code,

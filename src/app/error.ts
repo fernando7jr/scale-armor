@@ -3,6 +3,7 @@ import { StatusCode } from "./status";
 /**
  * An exception class to trace back of errors to their cause
  * @class
+ * @extends Error
  */
 export class TraceableError extends Error {
     private _name: string;
@@ -73,6 +74,7 @@ export class TraceableError extends Error {
 /**
  * An exception class to any exception which should be handled as an Response
  * @class
+ * @extends TraceableError
  */
 export class RequestHandlingError extends TraceableError {
     private _status: StatusCode;

@@ -35,13 +35,28 @@ class BoundAppProvider extends AppProvider {
     }
 };
 
+/**
+ * AppWrapper manipulates a given EndpointsProvider to inject endpoints and add handlers
+ * They create a new layer isolating functionality from the apps
+ * @class
+ */
 export abstract class AppWrapper<TMethod extends Function = Function> {
     private endpointsProvider: EndpointsProvider;
 
-    constructor(arg: EndpointsProvider) {
-        this.endpointsProvider = arg;
+    /**
+     * @constructor
+     * @param endpointsProvider - the endpoints-provider
+     */
+    constructor(endpointsProvider: EndpointsProvider) {
+        this.endpointsProvider = endpointsProvider;
     }
 
+    /**
+     * Get or create metadata from a target object and return it
+     * @static
+     * @param target - target object to be infused with metadata
+     * @returns the infused metadata
+     */
     private static getOrCreateAppWrapperMetadata<T extends object>(target: T): AppWrapperMetadata<T> {
         const targetPrototype = Reflect.getPrototypeOf(target) as ClassType;
         let metadata: AppWrapperMetadata<T> = Reflect.get(targetPrototype, appWrapperMetadataSymbol);
@@ -56,11 +71,23 @@ export abstract class AppWrapper<TMethod extends Function = Function> {
         return metadata;
     }
 
+    /**
+     * Binds an endpoint to an object
+     * @static
+     * @param target - the target object
+     * @param binding - the binding to be infused into the object metadata
+     */
     private static registerBinding<T extends object>(target: T, binding: EndpointBinding<T>): void {
         const metadata = this.getOrCreateAppWrapperMetadata(target);
         metadata.bindings.push(binding);
     }
 
+    /**
+     * Decorate a an static binding into the target
+     * @static
+     * @param target - the target object
+     * @param endpointBinding - the binding to be infused into the object metadata
+     */
     protected static decorateClassMethod<T extends Object>(
         target: T | any,
         endpointBinding: EndpointBinding<T>
@@ -72,6 +99,12 @@ export abstract class AppWrapper<TMethod extends Function = Function> {
         this.registerBinding(target, endpointBinding);
     }
 
+    /**
+     * Bind the given AppProvider to build an app using the target infused metadata
+     * The AppProvider passed as parameter will retain it is previous definitions. However they can be overrided by the target bindings
+     * @param target - the target object
+     * @param appProvider - the app-provider to be used as base
+     */
     static bindTargetToAppProvider<T extends Object>(target: T, appProvider: AppProvider): AppProvider {
         if (!target || !(target instanceof Object) || Array.isArray(target)) {
             throw new Error('Can not bind to a non-compatible object');
@@ -80,9 +113,20 @@ export abstract class AppWrapper<TMethod extends Function = Function> {
         return new BoundAppProvider(target, appProvider);
     }
 
+    /**
+     * Inject an endpoint into the endpoints-provider
+     * @param endpoint - the endpoint to be injected
+     */
     protected injectEndpoint(endpoint: Endpoint): void {
         this.endpointsProvider.endpoint(endpoint);
     }
 
+    /**
+     * Wrap an endpoint to allow addiotional behaviours and handlings
+     * @param method - the method to construct the endpoint
+     * @param route - the route to construct the endpoint
+     * @param prop - the value to be used as the endpoint callback after wrapping
+     * @returns @this
+     */
     protected abstract wrapEndpoint(method: Method, route: string, prop: TMethod): this;
 }
