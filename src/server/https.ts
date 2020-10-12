@@ -126,7 +126,7 @@ export class HttpsAppServer extends Server {
         const before = this.getBeforeMiddleware();
         const after = this.getAfterMiddleware();
         this.httpsServer = createServer(this.options, async (req, res) => {
-            const requestReader = await this.getRequestReader(req, before);
+            const requestReader = this.getRequestReader(req, before);
             const response = await this.resolve(requestReader);
             this.sendResponse(res, after(requestReader.head, response));
         });
