@@ -71,9 +71,9 @@ export class HttpsAppServer extends Server {
 
     /**
      * Get a request reader for the incoming message and apply the before hooks reducer
-     * @param req - the incoming message
-     * @param before - the before hooks reducer
-     * @returns the request-reader for the incoming message
+     * @param {IncomingMessage} req - the incoming message
+     * @param {function} before - the before hooks reducer
+     * @returns {RequestReader} the request-reader for the incoming message
      */
     protected getRequestReader(req: IncomingMessage, before?: BeforeHook): RequestReader {
         const method = req.method || '';
@@ -101,8 +101,8 @@ export class HttpsAppServer extends Server {
 
     /**
      * Send the response to the client
-     * @param res - the ServerResponse object
-     * @param response - the app built response
+     * @param {ServerResponse} res - the ServerResponse object
+     * @param {Response} response - the app built response
      */
     protected sendResponse(res: ServerResponse, response: Response): void {
         const statusCode = response.status.code;
@@ -118,6 +118,8 @@ export class HttpsAppServer extends Server {
     /**
      * Get if the server is already listening to requests
      * @abstract
+     * @readonly
+     * @type {boolean}
      */
     get isListening(): boolean {
         return !!this.httpsServer?.listening;
@@ -126,7 +128,8 @@ export class HttpsAppServer extends Server {
     /**
      * Get the AddressInfo which the server is listening on
      * @abstract
-     * @returns the AddressInfo or undefined when the server is not listening yet
+     * @readonly
+     * @returns {AddressInfo} the AddressInfo or undefined when the server is not listening yet
      */
     get addressInfo(): AddressInfo | undefined {
         const address = this.httpsServer?.address();
@@ -147,7 +150,7 @@ export class HttpsAppServer extends Server {
      * Load the options into the server instance
      * Should be called before starting the server
      * Certificates and other settings can be setuped here
-     * @param options - the options to this server instance
+     * @param {Object} options - the options to this server instance
      * @returns @this
      */
     loadOptions(options: HttpsAppServerOptions): this {
@@ -159,8 +162,8 @@ export class HttpsAppServer extends Server {
      * Puts the server to listen at the given port
      * If provided. The callback onListening is called when the server is ready to receive requests
      * @abstract
-     * @param port - the port to listen on
-     * @param onListening - a callback for when the server is ready to receive requests
+     * @param {number} port - the port to listen on
+     * @param {callback} onListening - a callback for when the server is ready to receive requests
      */
     listen(port: number, onListening?: () => void): this {
         const before = this.getBeforeMiddleware();
@@ -184,7 +187,7 @@ export class HttpsAppServer extends Server {
      * Stops the server from receiving any further incoming requests
      * @async
      * @abstract
-     * @returns an empty promise for when the server has completely stopped
+     * @returns {Promise} an empty promise for when the server has completely stopped
      */
     async stop(): Promise<{}> {
         return await new Promise((resolve, reject) => {

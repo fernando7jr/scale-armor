@@ -11,8 +11,8 @@ class _BaseApp implements EndpointsProvider {
 
     /**
      * Return which endpoint matches the given method and route combination
-     * @param method - the method for the endpoint
-     * @param path - the path for the endpoint
+     * @param {Method} method - the method for the endpoint
+     * @param {string} path - the path for the endpoint
      * @returns the matched endpoint if there is any
      */
     protected match(method: Method, route: string): Endpoint | undefined {
@@ -21,15 +21,15 @@ class _BaseApp implements EndpointsProvider {
 
     /**
      * Store an endpoint for the given method, path and callback
-     * @param method - the method for the endpoint
-     * @param path - the path for the endpoint
-     * @param callback - the callback for the endpoint
+     * @param {Method} method - the method for the endpoint
+     * @param {string} path - the path for the endpoint
+     * @param {function} callback - the callback for the endpoint
      * @returns @this
      */
     endpoint(method: Method, route: string, callback: EndpointCallback): this;
     /**
      * Store an endpoint
-     * @param endpoint - the endpoint to be used
+     * @param {function} endpoint - the endpoint to be used
      * @returns @this
      */
     endpoint(endpoint: Endpoint): this;
@@ -49,8 +49,8 @@ class _BaseApp implements EndpointsProvider {
 
     /**
      * Checks if @this responds to the given combination of method and route
-     * @param method - to method to test if it is present with the route
-     * @param route - to route to test if it is present with the method
+     * @param {Method} method - to method to test if it is present with the route
+     * @param {string} route - to route to test if it is present with the method
      * @returns true for when it responds to the given combiantion otherwise false
      */
     respondsTo(method: Method, route: string): boolean {
@@ -81,7 +81,7 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
 
     /**
      * @constructor
-     * @param name - the name for the app
+     * @param {string} name - the name for the app
      */
     constructor(name: string) {
         super();
@@ -91,7 +91,7 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
     /** 
      * Handle the case when there is no endpoint for the request
      * @async
-     * @param requestReader - the requestReader which did not resolve to any endpoint
+     * @param {RequestReader} requestReader - the requestReader which did not resolve to any endpoint
      * @returns a promise to a response-builder
      */
     protected async resolveNotFoundEndpoint(requestReader: RequestReader): Promise<ResponseBuilder> {
@@ -101,8 +101,8 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
     /**
      * Handle the case when an error occurs during request digestion
      * @async
-     * @param requestReader - the requestReader which is being digested
-     * @param error - the caused error
+     * @param {RequestReader} requestReader - the requestReader which is being digested
+     * @param {TraceableError} error - the caused error
      */
     protected async resolveRequestHandlingErrorEndpoint(requestReader: RequestReader, error: TraceableError): Promise<ResponseBuilder> {
         const status = error instanceof RequestHandlingError ? error.status : StatusCodes.InternalServerError;
@@ -113,7 +113,7 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
 
     /**
      * Get the endpoint for the given RequestReader
-     * @param requestReader - the request reader to match an endpoint
+     * @param {RequestReader} requestReader - the request reader to match an endpoint
      */
     protected getEndpoint(requestReader: RequestReader): Endpoint | undefined {
         const { method, route } = requestReader.head;
@@ -126,8 +126,8 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
     /**
      * Digest the request by calling the endpoint and return the response builder
      * @async
-     * @param requestReader - the request reader
-     * @param endpoint - the matched endpoint
+     * @param {RequestReader} requestReader - the request reader
+     * @param {Endpoint} endpoint - the matched endpoint
      * @returns a promise to a ResponseBuilder
      */
     protected abstract async digestRequest(requestReader: RequestReader, endpoint: Endpoint): Promise<ResponseBuilder>;
@@ -136,7 +136,7 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
      * Resolve the request reader to an endpoint and digest it
      * Errors and unmatched endpoints are handled automatically
      * @async
-     * @param requestReader - the request reader
+     * @param {RequestReader} requestReader - the request reader
      * @returns a promise to a ResponseBuilder
      */
     async resolve(requestReader: RequestReader): Promise<ResponseBuilder> {
@@ -155,7 +155,10 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
         }
     }
 
-    /** Get the name of the EndpointsResolver */
+    /** 
+     * Get the name of the EndpointsResolver
+     * @returns {string}
+     */
     get name(): string {
         return this._name;
     }
@@ -173,7 +176,7 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
 export abstract class AppProvider extends _BaseApp {
     /**
      * Copy the endpoints from the blueprint to the EndpointsProvider
-     * @param endpointsProvider - an EndpointsProvider
+     * @param {EndpointsProvider} endpointsProvider - an EndpointsProvider
      */
     protected copyEndpointsTo(endpointsProvider: EndpointsProvider): void {
         for (const endpoint of this.endpoints) {
@@ -183,7 +186,7 @@ export abstract class AppProvider extends _BaseApp {
 
     /**
      * Copy the endpoints from the EndpointsProvider to the AppProvider
-     * @param endpointsProvider - an EndpointsProvider
+     * @param {EndpointsProvider} endpointsProvider - an EndpointsProvider
      * @returns @this
      */
     copyEndpointsFrom(endpointsProvider: EndpointsProvider): this {
@@ -195,8 +198,8 @@ export abstract class AppProvider extends _BaseApp {
 
     /**
      * Build an app with the given name
-     * @param name - the name for the app
-     * @returns an app with the given name from the defined blueprint in this AppProvider
+     * @param {string} name - the name for the app
+     * @returns {App} an app with the given name from the defined blueprint in this AppProvider
      */
     abstract build(name: string): App;
 }

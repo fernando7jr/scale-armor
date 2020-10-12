@@ -16,9 +16,25 @@ export type BeforeHook = (request: Request) => Request;
  * @implements RequestReader
  */
 export abstract class RequestReaderBase implements RequestReader {
+    /**
+     * @constructor
+     * @param {function} before - before hook reducer
+     */
     constructor(private before?: BeforeHook) { }
 
+    /**
+     * Get the heading of the request
+     * @abstract
+     * @readonly
+     * @type {RequestHead}
+     */
     abstract get head(): RequestHead;
+    /**
+     * Check if the request has a body
+     * @abstract
+     * @readonly
+     * @type {boolean}
+     */
     abstract get hasBody(): boolean;
 
     protected abstract onDataChunk(encoding: string, onChunk: (chunk: string) => void): Promise<{}>;
@@ -27,11 +43,11 @@ export abstract class RequestReaderBase implements RequestReader {
 
     /**
      * Choose the body type according to the content-type and return a callback to it
-     * @param contentType - the content-type form the request
-     * @param encoding - the encoding of the content-type if present
-     * @returns a callback to build the response body
+     * @param {string} contentType - the content-type form the request
+     * @param {string} encoding - the encoding of the content-type if present
+     * @returns {function} a callback to build the response body
      */
-    private getBodyParser<T = unknown>(contentType: String, encoding?: BufferEncoding): (data: Buffer) => RequestBody<T> {
+    private getBodyParser<T = unknown>(contentType: string, encoding?: BufferEncoding): (data: Buffer) => RequestBody<T> {
         switch (contentType) {
             case 'application/json':
                 return (data: Buffer) => {
@@ -72,7 +88,7 @@ export abstract class RequestReaderBase implements RequestReader {
      * Read the body
      * @template T defaults unknown - the interface to the body content if it is applicable
      * @async
-     * @returns a promise to the request body
+     * @returns {Promise} a promise to the request body
      */
     protected async readBody<T = unknown>(): Promise<RequestBody<T>> {
         const head = this.head;
@@ -93,7 +109,7 @@ export abstract class RequestReaderBase implements RequestReader {
      * Before hooks are executed on the request automatically
      * @template T defaults unknown - the interface to the body content if it is applicable
      * @async
-     * @returns a promise to the request
+     * @returns {Promise} a promise to the request
      */
     async read<T = unknown>(): Promise<Request<T>> {
         const requestHead = this.head;
@@ -124,16 +140,16 @@ export abstract class RequestReaderBase implements RequestReader {
      * Stream the body in chunks using the defined enconding.
      * Good for reading files or huge amount of data.
      * The chunks will be converted to a string instead of a Buffer object.
-     * @param encoding - the encoding of the content
-     * @param onChunk - the callback to process each chunk
-     * @returns an promise of empty for when all chunks were read
+     * @param {string} encoding - the encoding of the content
+     * @param {string} onChunk - the callback to process each chunk
+     * @returns {Promise} an promise of empty for when all chunks were read
      */
     stream(encoding: string, onChunk: (chunk: string) => void): Promise<{}>;
     /** 
      * Stream the body in chunks using the defined enconding.
      * Good for reading files or huge amount of data.
-     * @param onChunk - the callback to process each chunk
-     * @returns an promise of empty for when all chunks were read
+     * @param {function} onChunk - the callback to process each chunk
+     * @returns {Promise} an promise of empty for when all chunks were read
      */
     stream(onChunk: (chunk: Buffer) => void): Promise<{}>;
     stream(encoding: string | Callback<Buffer>, onChunk?: Callback<string>): Promise<{}> {

@@ -31,29 +31,44 @@ export class CommonResponseBuilder implements ResponseBuilder {
         this._status = response.status;
     }
 
-    /** Get the content-type */
+    /** 
+     * Get the content-type 
+     * @readonly
+     * @type {string}
+     */
     get contentType(): string {
         return this._contentType;
     }
 
-    /** Get the headers dict */
+    /** 
+     * Get the headers dict 
+     * @readonly
+     * @type {Headers}
+     */
     get headers(): Headers {
         return this._headers;
     }
 
-    /** Get the status code */
+    /** 
+     * Get the status code
+     * @readonly
+     * @type {StatusCode}
+     */
     get status(): StatusCode {
         return this._status;
     }
 
-    /** Get the body */
+    /** 
+     * Get the body 
+     * @readonly
+     */
     protected get body(): any {
         return this._body;
     }
 
     /**
      * Build the Response object
-     * @returns the response
+     * @returns {Response} the response
      */
     build(): Response {
         const body = this.body;
@@ -88,7 +103,10 @@ export class TextResponseBuilder extends CommonResponseBuilder {
         });
     }
 
-    /** Get the body. Defaults to '' when not set */
+    /** 
+     * Get the body. Defaults to '' when not set
+     * @readonly
+     */
     protected get body(): any {
         return super.body || '';
     }
@@ -111,6 +129,7 @@ export class StatusResponseBuilder extends TextResponseBuilder {
 
     /** 
      * Get the body
+     * @readonly
      */
     protected get body(): any {
         const body = super.body;
@@ -144,7 +163,11 @@ export class JSONResponseBuilder extends CommonResponseBuilder {
         });
     }
 
-    /** Get the serialized body */
+    /** 
+     * Get the serialized body 
+     * @readonly
+     * @type {string}
+     */
     protected get body(): string {
         return JSON.stringify(super.body);
     }

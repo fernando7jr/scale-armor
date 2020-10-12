@@ -33,13 +33,14 @@ export interface EndpointsProvider {
      * Checks if @this responds to the given combination of method and route
      * @param method - to method to test if it is present with the route
      * @param route - to route to test if it is present with the method
-     * @returns true for when it responds to the given combiantion otherwise false
+     * @returns {boolean} true for when it responds to the given combiantion otherwise false
      */
     respondsTo(method: Method, route: string): boolean;
 
     /**
      * Get all the endpoints stored in this provider
      * @readonly
+     * @type {Array}
      */
     readonly endpoints: readonly Endpoint[];
 }
@@ -51,11 +52,15 @@ export interface EndpointsResolver extends EndpointsProvider {
     /**
      * Resolve the request to one of it is endpoints.
      * Absence of an endpoint, error handling and the actual resolution depends on how it is implemented
-     * @param requestReader - A RequestReader to be resolved
-     * @returns a promise to a ResponseBuilder
+     * @param {RequestReader} requestReader - A RequestReader to be resolved
+     * @returns {ResponseBuilder} a promise to a ResponseBuilder
      */
     resolve(requestReader: RequestReader): Promise<ResponseBuilder>;
 
-    /** Get the name of the EndpointsResolver */
+    /** 
+     * Get the name of the EndpointsResolver 
+     * @readonly
+     * @type {string}
+     */
     readonly name: string;
 }

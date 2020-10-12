@@ -11,8 +11,8 @@ export class TraceableError extends Error {
 
     /**
      * @constructor
-     * @param name - The name of the error
-     * @param what - The description of the error
+     * @param {string} name - The name of the error
+     * @param {string} what - The description of the error
      * @param cause - The true cause of the error. It can be an Error or anything
      */
     constructor(name: string, what: string, cause?: Error | any) {
@@ -23,6 +23,8 @@ export class TraceableError extends Error {
 
     /**
      * Get the name of the error
+     * @readonly
+     * @type {string}
      */
     get name() {
         return this._name;
@@ -30,6 +32,7 @@ export class TraceableError extends Error {
 
     /**
      * Get the cause of the error
+     * @readonly
      */
     get cause() {
         return this._cause;
@@ -38,6 +41,8 @@ export class TraceableError extends Error {
     /**
      * Get the cause of the error but always return an error object or undefined
      * Very similar to @this.cause
+     * @readonly
+     * @type {Error}
      */
     get causeError(): Error | undefined {
         if (!this._cause) {
@@ -59,8 +64,9 @@ export class TraceableError extends Error {
 
     /**
      * Returns a fully detailed description of the error with the stack trace
+     * @returns {string}
      */
-    toString() {
+    toString(): string {
         const cause = this.causeError;
 
         if (!cause) {
@@ -92,6 +98,8 @@ export class RequestHandlingError extends TraceableError {
 
     /**
      * Get the status code for this error
+     * @readonly
+     * @type {StatusCode}
      */
     get status(): StatusCode {
         return this._status;
