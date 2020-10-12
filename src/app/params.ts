@@ -1,9 +1,13 @@
 import { parse as qsParse } from 'qs';
 
+/** The acceptable primitives for a value in Params */
 export type ParamsPrimitives = string | number | boolean | null | undefined;
-export type Params = { [key: string]: ParamsPrimitives | Array<ParamsPrimitives> | any };
+/** The Params from a request query string */
+export type Params = { [key: string]: ParamsPrimitives | Array<ParamsPrimitives> | any; };
+
 
 const numbers = new RegExp('^\d+(.\d+)?$');
+/** Parse a query string to a Params object */
 export function parseParams(paramsString: string): Params {
     return qsParse(paramsString, {
         allowDots: true,
