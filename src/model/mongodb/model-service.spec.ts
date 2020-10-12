@@ -482,4 +482,23 @@ describe(MongoDbModelService.name, () => {
         expect(result.total).to.equals(1);
         expect(result.data.length).to.equals(1);
     });
+
+    it('should count all documents paged using an or filter', async () => {
+        let documents = getMockData();
+        documents.push({
+            age: 999,
+            name: 'Old',
+            _id: 999,
+            amount: 2
+        } as TestModel);
+        await modelService.createAll(documents);
+
+        const result = await modelService.count({
+            $or: [
+                { $on: { age: { $gt: 12 } } },
+                { $on: { amount: { $isSet: true } } },
+            ]
+        });
+        expect(result).to.equals(3);
+    });
 });

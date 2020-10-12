@@ -1,6 +1,6 @@
-import { App, AppProvider, JSONResponseBuilder, Method, Params, RequestReader, ResponseBuilder, SimpleApp, StatusCodes } from "../app";
+import { App, SimpleAppProvider, JSONResponseBuilder, Method, Params, RequestReader, ResponseBuilder, StatusCodes, RequestHandlingError, TraceableError } from "../app";
 import { PagingOptions } from "../utils";
-import { CrudMethods, ModelController } from "./model-controller";
+import { CrudMethods, InvalidModelError, ModelController, ModelMapError } from "./model-controller";
 import { Model } from "./model-service";
 import { Id, Query, QueryById } from "./query";
 
@@ -12,7 +12,7 @@ const enum CrudMethodsExtended {
 
 export type ModelAppOperations = CrudMethods | CrudMethodsExtended;
 
-export class ModelAppProvider<TModel extends Model<TId>, TId extends Id<unknown> = unknown> extends AppProvider {
+export class ModelAppProvider<TModel extends Model<TId>, TId extends Id<unknown> = unknown> extends SimpleAppProvider {
     private __modelController: ModelController<TModel, TId>;
     private __allowedOperations: ModelAppOperations[];
 
@@ -139,8 +139,23 @@ export class ModelAppProvider<TModel extends Model<TId>, TId extends Id<unknown>
         return new JSONResponseBuilder(pagedData, StatusCodes.Ok);
     }
 
+    protected wrapCallback(callback: (requestReader: RequestReader) => Promise<ResponseBuilder>) {
+        return async (requestReader: RequestReader) => {
+            try {
+                return await callback(requestReader);
+            } catch (error) {
+                if (error instanceof InvalidModelError) {
+                    throw new RequestHandlingError(StatusCodes.BadRequest, error.name, error);
+                } else if (error instanceof ModelMapError) {
+                    throw new RequestHandlingError(StatusCodes.InternalServerError, error.name, error);
+                }
+                throw new TraceableError(ModelAppProvider.name, 'endpoint resolution error', error);
+            }
+        };
+    }
+
     build(name: string, allowedOperations?: ModelAppOperations[]): App {
-        const app = new SimpleApp(name);
+        const app = super.build(name);
         allowedOperations = allowedOperations || this.__allowedOperations;
         const allowAll = allowedOperations.length == 0;
         const crudMethods = allowedOperations.reduce((obj, m) => {
@@ -148,38 +163,39 @@ export class ModelAppProvider<TModel extends Model<TId>, TId extends Id<unknown>
             return obj;
         }, {} as { [key in ModelAppOperations]: true });
 
+        // Inject endpoints
         if (allowAll || CrudMethods.Count in crudMethods) {
-            app.endpoint(Method.Get, '/count', async requestReader => this.count(requestReader));
+            app.endpoint(Method.Get, '/count', this.wrapCallback(requestReader => this.count(requestReader)));
         }
         if (allowAll || CrudMethodsExtended.CountPost in crudMethods) {
-            app.endpoint(Method.Post, '/count', async requestReader => this.countPost(requestReader));
+            app.endpoint(Method.Post, '/count', this.wrapCallback(requestReader => this.countPost(requestReader)));
         }
 
         if (allowAll || CrudMethods.Find in crudMethods) {
-            app.endpoint(Method.Get, '/find', async requestReader => this.find(requestReader));
+            app.endpoint(Method.Get, '/find', this.wrapCallback(requestReader => this.find(requestReader)));
         }
         if (allowAll || CrudMethodsExtended.FindPost in crudMethods) {
-            app.endpoint(Method.Post, '/find', async requestReader => this.findPost(requestReader));
+            app.endpoint(Method.Post, '/find', this.wrapCallback(requestReader => this.findPost(requestReader)));
         }
 
         if (allowAll || CrudMethods.Get in crudMethods) {
-            app.endpoint(Method.Get, '/get', async requestReader => this.get(requestReader));
+            app.endpoint(Method.Get, '/get', this.wrapCallback(requestReader => this.get(requestReader)));
         }
         if (allowAll || CrudMethodsExtended.GetPost in crudMethods) {
-            app.endpoint(Method.Post, '/get', async requestReader => this.getPost(requestReader));
+            app.endpoint(Method.Post, '/get', this.wrapCallback(requestReader => this.getPost(requestReader)));
         }
 
         if (allowAll || CrudMethods.Create in crudMethods) {
-            app.endpoint(Method.Post, '/', async requestReader => this.create(requestReader));
+            app.endpoint(Method.Post, '/', this.wrapCallback(requestReader => this.create(requestReader)));
         }
         if (allowAll || CrudMethods.Put in crudMethods) {
-            app.endpoint(Method.Put, '/', async requestReader => this.put(requestReader));
+            app.endpoint(Method.Put, '/', this.wrapCallback(requestReader => this.put(requestReader)));
         }
         if (allowAll || CrudMethods.Patch in crudMethods) {
-            app.endpoint(Method.Patch, '/', async requestReader => this.patch(requestReader));
+            app.endpoint(Method.Patch, '/', this.wrapCallback(requestReader => this.patch(requestReader)));
         }
         if (allowAll || CrudMethods.Delete in crudMethods) {
-            app.endpoint(Method.Delete, '/', async requestReader => this.delete(requestReader));
+            app.endpoint(Method.Delete, '/', this.wrapCallback(requestReader => this.delete(requestReader)));
         }
 
         return app;
