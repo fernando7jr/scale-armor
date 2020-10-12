@@ -1,15 +1,14 @@
 {
   "name": "scale-armor",
-  "version": "2.0.0-beta.0",
+  "version": "2.0.0-beta.2",
   "description": "Easy and simple scalable node restful api framework",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "tsc": "tsc",
     "type-check": "tsc --noEmit",
-    "build": "tsc",
-    "prepack": "npm run build",
     "mocha": "mocha",
+    "build": "tsc",
     "test": "mocha -r ts-node/register -r ./test/async-dump.js --exit \"src/**/*.spec.ts\""
   },
   "author": {
