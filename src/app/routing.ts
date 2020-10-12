@@ -1,8 +1,6 @@
 import { Method } from './request';
 import { AppWrapper } from './app-wrapper';
 import { EndpointCallback } from './endpoint';
-import { App, AppProvider } from './app';
-
 
 export class Routing extends AppWrapper {
     protected wrapEndpoint(method: Method, route: string, func: Function): this {

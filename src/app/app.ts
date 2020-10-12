@@ -90,7 +90,11 @@ export abstract class App extends _BaseApp implements EndpointsResolver {
 }
 
 export abstract class AppProvider extends _BaseApp {
-    protected copyEndpoints(endpointsProvider: EndpointsProvider): void {
+    /**
+     * Copy the endpoints from the blueprint to the EndpointsProvider
+     * @param endpointsProvider - an EndpointsProvider
+     */
+    protected copyEndpointsTo(endpointsProvider: EndpointsProvider): void {
         for (const endpoint of this.endpoints) {
             endpointsProvider.endpoint(endpoint);
         }

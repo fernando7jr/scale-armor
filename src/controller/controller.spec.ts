@@ -48,7 +48,7 @@ describe(Controller.name, () => {
         return new class extends AppProvider {
             build(name: string): App {
                 const app = new TestApp(name);
-                this.copyEndpoints(app);
+                this.copyEndpointsTo(app);
                 return app;
             }
         }();
