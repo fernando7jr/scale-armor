@@ -1,5 +1,5 @@
 import { App, SimpleAppProvider, JSONResponseBuilder, Method, Params, RequestReader, ResponseBuilder, StatusCodes, RequestHandlingError, TraceableError } from "../app";
-import { PagingOptions } from "../utils";
+import { PaginationOptions } from "../utils";
 import { CrudMethods, InvalidModelError, ModelController, ModelMapError } from "./model-controller";
 import { Model } from "./model-service";
 import { Id, Query, QueryById } from "./query";
@@ -31,8 +31,8 @@ export class ModelAppProvider<TModel extends Model<TId>, TId extends Id<unknown>
         return "$id" in where ? where : ({} as any);
     }
 
-    protected getPagingOptions(params: Params): Partial<PagingOptions> {
-        const options: Partial<PagingOptions> = {};
+    protected getPagingOptions(params: Params): Partial<PaginationOptions> {
+        const options: Partial<PaginationOptions> = {};
 
         if ('page' in params) {
             options.page = params.page || undefined;

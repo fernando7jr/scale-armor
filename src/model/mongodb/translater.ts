@@ -1,5 +1,5 @@
 import { ClientSession, FilterQuery, FindOneOptions } from "mongodb";
-import { PagingOptions } from "../../utils";
+import { PaginationOptions } from "../../utils";
 import { Id, Query, queryComparingKeys, QueryOn, QueryOperator } from "../query";
 
 export class MongoDbTranslater<T, TId extends Id<unknown> = unknown> {
@@ -47,7 +47,7 @@ export class MongoDbTranslater<T, TId extends Id<unknown> = unknown> {
         return mongodbQuery;
     }
 
-    translateFindOptions(options?: Partial<PagingOptions>, session?: ClientSession) {
+    translateFindOptions(options?: Partial<PaginationOptions>, session?: ClientSession) {
         options = options || {};
 
         const findOneOptions: FindOneOptions<any> = {};

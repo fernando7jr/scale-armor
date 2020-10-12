@@ -1,5 +1,5 @@
 import { TraceableError } from "../app";
-import { PagedData, PagingOptions } from "../utils";
+import { PaginatedData, PaginationOptions } from "../utils";
 import { IdOptional, Model, ModelService } from "./model-service";
 import { Id, Query } from "./query";
 
@@ -75,7 +75,7 @@ export abstract class ModelController<TModel extends Model<TId>, TId extends Id<
         return await this.__modelService.count(query || {});
     }
 
-    async find(query?: Query<TModel, TId>, options?: Partial<PagingOptions>): Promise<PagedData<TModel>> {
+    async find(query?: Query<TModel, TId>, options?: Partial<PaginationOptions>): Promise<PaginatedData<TModel>> {
         const result = await this.__modelService.findAll(query || {}, options);
         result.data = this.mapData(result.data, CrudMethods.Find);
         return result;

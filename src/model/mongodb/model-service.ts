@@ -1,5 +1,5 @@
 import { ClientSession, Cursor as __Cursor, Db, MongoClient, Collection } from 'mongodb';
-import { PagedData, PagingOptions } from '../../utils';
+import { PaginatedData, PaginationOptions } from '../../utils';
 import { Cursor, DeleteResult, IdLess, Model, ModelService, IdOptional, ReplaceResult, Transaction, UpdateResult, InsertOrUpdateResult } from '../model-service';
 import { Id, Query, UpdateQuery } from '../query';
 import { MongoDbCursor } from './cursor';
@@ -52,11 +52,11 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         });
     }
 
-    private getOptionsAndTransaction(arg1?: Partial<PagingOptions> | Transaction, arg2?: Transaction) {
-        let options: Partial<PagingOptions> = {};
+    private getOptionsAndTransaction(arg1?: Partial<PaginationOptions> | Transaction, arg2?: Transaction) {
+        let options: Partial<PaginationOptions> = {};
         let transaction: Transaction | undefined = undefined;
         if (arg1 && arg2) {
-            options = arg1 as Partial<PagingOptions>;
+            options = arg1 as Partial<PaginationOptions>;
             transaction = arg2;
         } else if (arg1) {
             if (arg1 instanceof Transaction) {
@@ -76,10 +76,10 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         return { options, session };
     }
 
-    async select(query: Query<T, TId>, options?: Partial<PagingOptions>): Promise<Cursor<T>>;
+    async select(query: Query<T, TId>, options?: Partial<PaginationOptions>): Promise<Cursor<T>>;
     async select(query: Query<T, TId>, transaction?: Transaction): Promise<Cursor<T>>;
-    async select(query: Query<T, TId>, options?: Partial<PagingOptions> | Transaction, transaction?: Transaction): Promise<Cursor<T>>;
-    async select(query: Query<T, TId>, arg2?: Partial<PagingOptions> | Transaction, arg3?: Transaction): Promise<Cursor<T>> {
+    async select(query: Query<T, TId>, options?: Partial<PaginationOptions> | Transaction, transaction?: Transaction): Promise<Cursor<T>>;
+    async select(query: Query<T, TId>, arg2?: Partial<PaginationOptions> | Transaction, arg3?: Transaction): Promise<Cursor<T>> {
         const { options, session } = this.getOptionsAndTransaction(arg2, arg3);
         const mongodbQuery = this.translater.translateFindQuery(query);
         const findOptions = this.translater.translateFindOptions(options, session);
@@ -203,7 +203,7 @@ export class MongoDbModelService<T extends Model<TId>, TId extends Id<unknown> =
         return result || undefined;
     }
 
-    async findAll(query: Query<T, TId>, options?: Partial<PagingOptions>): Promise<PagedData<T>> {
+    async findAll(query: Query<T, TId>, options?: Partial<PaginationOptions>): Promise<PaginatedData<T>> {
         options = options || {};
         options.page = options.page || 1;
         options.pageSize = options.pageSize || 50;

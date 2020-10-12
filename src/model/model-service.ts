@@ -1,5 +1,5 @@
 import { Id, Query, UpdateQuery } from './query';
-import { PagedData, PagingOptions } from '../utils';
+import { PaginatedData, PaginationOptions } from '../utils';
 
 export interface Model<TId extends Id<unknown> = unknown> {
     _id: TId;
@@ -52,7 +52,7 @@ export interface ModelService<T extends Model<TId>, TId extends Id<unknown> = un
 
     withTransaction(callback: (transaction: Transaction) => Promise<void>): void;
     select(query: Query<T, TId>, transaction?: Transaction): Promise<Cursor<T>>;
-    select(query: Query<T, TId>, options?: Partial<PagingOptions>, transaction?: Transaction): Promise<Cursor<T>>;
+    select(query: Query<T, TId>, options?: Partial<PaginationOptions>, transaction?: Transaction): Promise<Cursor<T>>;
     count(query?: Query<T, TId>, transaction?: Transaction): Promise<number>;
     update<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
     updateAll<Q extends Query<T, TId>, U extends UpdateQuery<T>>(query: Q, update: U, transaction?: Transaction): Promise<UpdateResult>;
@@ -66,7 +66,7 @@ export interface ModelService<T extends Model<TId>, TId extends Id<unknown> = un
 
     getById(id: TId): Promise<T | undefined>;
     find<Q extends Query<T, TId>>(query: Q): Promise<T | undefined>;
-    findAll(query: Query<T, TId>, options?: Partial<PagingOptions>): Promise<PagedData<T>>;
+    findAll(query: Query<T, TId>, options?: Partial<PaginationOptions>): Promise<PaginatedData<T>>;
 
     create(model: IdOptional<T, TId>): Promise<T | undefined>;
     createAll(models: IdOptional<T, TId>[]): Promise<T[]>;
