@@ -149,7 +149,7 @@ export class Routing extends AppWrapper {
      *  class Test {
      *      message = 'Hello World!';
      *      @Routing.Get('/')
-     *      async getStatus(requestReader) {
+     *      async getStatus(requestReader: RequestReader) {
      *          return new StatusResponseBuilder(StatusCodes.Ok, this.message);
      *      }
      *  }
@@ -173,7 +173,7 @@ export class Routing extends AppWrapper {
      *  class Test {
      *      message = 'Hello World!';
      *      @Routing.Post('/')
-     *      async postStatus(requestReader) {
+     *      async postStatus(requestReader: RequestReader) {
      *          return new StatusResponseBuilder(StatusCodes.Ok, this.message);
      *      }
      *  }
@@ -197,7 +197,7 @@ export class Routing extends AppWrapper {
      *  class Test {
      *      message = 'Hello World!';
      *      @Routing.Put('/')
-     *      async putStatus(requestReader) {
+     *      async putStatus(requestReader: RequestReader) {
      *          return new StatusResponseBuilder(StatusCodes.Ok, this.message);
      *      }
      *  }
@@ -221,7 +221,7 @@ export class Routing extends AppWrapper {
      *  class Test {
      *      message = 'Hello World!';
      *      @Routing.Patch('/')
-     *      async patchStatus(requestReader) {
+     *      async patchStatus(requestReader: RequestReader) {
      *          return new StatusResponseBuilder(StatusCodes.Ok, this.message);
      *      }
      *  }
@@ -245,7 +245,7 @@ export class Routing extends AppWrapper {
      *  class Test {
      *      message = 'Hello World!';
      *      @Routing.Delete('/')
-     *      async deleteStatus(requestReader) {
+     *      async deleteStatus(requestReader: RequestReader) {
      *          return new StatusResponseBuilder(StatusCodes.Ok, this.message);
      *      }
      *  }
