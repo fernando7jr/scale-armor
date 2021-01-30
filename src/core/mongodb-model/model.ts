@@ -24,14 +24,16 @@ export abstract class MongoDbModelService<T extends Model> implements PersistedM
      * Creates an instance of MongoDbModelService.
      * @param {string} collectionName
      * @param {(MongoDbSchema | string)} [schema]
+     * @param {(string)} [databaseName]
      * @memberof MongoDbModelService
      */
-    constructor(collectionName: string, schema?: MongoDbSchema | string) {
+    constructor(collectionName: string, schema?: MongoDbSchema | string, databaseName?: string | any) {
         this.__name = collectionName;
         this.__model = MongoDbConnection.modelFor(
             this.__name,
             this.__name,
-            schema
+            schema,
+            databaseName
         );
     }
 

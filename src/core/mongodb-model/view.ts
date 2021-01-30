@@ -71,12 +71,12 @@ export abstract class MongoDbModelView<T extends Model> extends MongoDbModelServ
      * @returns
      * @memberof MongoDbModelView
      */
-    static viewOf<T extends Model>(collectionName: string, projection?: ProjectionOf<T>) {
+    static viewOf<T extends Model>(collectionName: string, projection?: ProjectionOf<T>, databaseName?: string | any) {
         return class extends MongoDbModelView<T> {
             projection = projection;
 
             constructor() {
-                super(collectionName);
+                super(collectionName, undefined, databaseName);
             }
         } as ConstructorOf<MongoDbModelView<ProjectionOf<T>>>
     }
