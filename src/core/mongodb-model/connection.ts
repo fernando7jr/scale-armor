@@ -34,10 +34,10 @@ export class MongoDbConnection {
         set('useFindAndModify', false);
     }
 
-    static connect() {
+    static connect(databaseName: string | any = null) {
         this.init();
         const mongouri = ConfigStorage.get('mongodbUri');
-        const dbName = ConfigStorage.get('mongodbDatabaseName') || 'local';
+        const dbName = databaseName || ConfigStorage.get('mongodbDatabaseName') || 'local';
         const params = {dbName: dbName, useNewUrlParser: true, useUnifiedTopology: true};
         return createConnection(mongouri, params);
     }
@@ -65,7 +65,7 @@ export class MongoDbConnection {
         }, {}));
     }
 
-    static modelFor(name: string, collectioName?: string, schematics?: any | string): MongooseModel<Document> {
+    static modelFor(name: string, collectioName?: string, schematics?: any | string, databaseName?: string | any): MongooseModel<Document> {
         let model = this.models[name];
         if (model) {
             return model.model;
@@ -78,7 +78,7 @@ export class MongoDbConnection {
         } else {
             schematics = new Schema({}, {strict: false});
         }
-        const connection = this.connect();
+        const connection = this.connect(databaseName);
         model = {
             model: connection.model(name, schematics, collectioName, ),
             schema: schematics
